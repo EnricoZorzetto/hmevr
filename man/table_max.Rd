@@ -8,9 +8,10 @@ table_max(df, Nt = 366, reshuffle_days = FALSE)
 }
 \arguments{
 \item{df}{A data frame with the precipitation data. It must be a data frame
-with fields PRCP and YEAR (integer in format YYYY)}
+with fields PRCP (daily precipitation) and
+YEAR (integer in format YYYY)}
 
-\item{Nt}{The number of events/year (default is 366). If record length in an
+\item{Nt}{The number of events/year (default is Nt = 366). If record length in an
 year is shorter than Nt, zero values are added.
 If longer, excess values are dropped.}
 
@@ -18,12 +19,13 @@ If longer, excess values are dropped.}
 and the intensities of all events
 in the time series are
 resampled without resubstitution
-(default is FALSE)}
+(default is reshuffle_days = FALSE)}
 }
 \value{
 a list with the following quantities:
 \describe{
-  \item{data}{matrix of size nyears*Nt with the daily values}
+  \item{data}{matrix of size nyears*Nt with the daily values.
+    Each row is an yearly sample (with non-zero values at the beginning)}
   \item{max}{block maxima values (array with length = nyears)}
   \item{Xi}{annual maxima sorted in ascending order (array of size nyears)}
   \item{Fi}{ Empirical non exceedance frequency for the annual maxima Xi
@@ -48,5 +50,7 @@ a list with the following quantities:
 Compute block (yearly) rainfall statistics for a rainfall dataset.
 }
 \examples{
+\dontrun{
 table_max(nycp)
+}
 }

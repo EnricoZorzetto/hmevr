@@ -115,73 +115,84 @@ table_max <- function(df, Nt = 366, reshuffle_days = FALSE){
   return(res)
 }
 
+#'   Generate syntetic data according to a given specification.
+#'   generates a matrix xij of synthetic data with dimension S*Nt
+#'   where S = number of blocks (e.g., years), and
+#'         Nt = number of observations/block
+#'   with nj the number of non-zero events in each block
+#'   Data are i.i.d., and non-zero events are stacked at the 'beginning' of each
+#'   block (e.g., their random inter-arrival times are not reproduced here!)
+#'   The distribution for the xij magnitudes and number of events nj
+#'   must be specified from the possible available.
+#'
+#'   ----------------------------------------------------------------------------
+#'      'bin'      -> nj ~ binomial(Nt, pn)
+#'      'betabin'  -> nj ~ betabinomial(Nt, an, bn) or [mn, varn]
+#'      'constant' -> nj ~ diracDelta(nc)
+#'  -----------------------------------------------------------------------------
 
+#'
+#'  The magnitudes of the events xij are drawn from one of the following models::
+#'  -----------------------------------------------------------------------------
+#'      Model specification:                         | Parameters to pass:
+#'  -----------------------------------------------------------------------------
+#'      'gam'     -> xij ~ gamma(a, b)               |  [a, b]
+#'      'gpd'     -> xij ~ gpd(xi, sigma)            |  [xi, sigma]
+#'      'wei'     -> xij ~ Weibull(C, w)             |  [C, w]
+#'      'wei_dyl' -> xij ~ Weibull(Cj, wj) with      |  [muc, sigmac, muw, sigmaw]
+#'                                                   |  or:   [mc, sc, mw, sw]
+#'                   Cj  ~ lognormal(muc, sigmac)    |
+#'                   wj  ~ lognormal(muw, sigmaw)    |
+#'      'wei_dsl' -> xij ~ Weibull(Cj, w) with       |  [muc, sigmac, w]
+#'                   Cj  ~ lognormal(muc, sigmac)    |
+#'      'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  [ac, bc, aw, bw]
+#'                                                   |  or: [mc, sc, mw, sw]
+#'                    Cj   ~ gamma(ac, bc)           |
+#'                    wj   ~ gamma(aw, bw)           |
+#'      'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  [aga, bga, agb, bgb]
+#'                                                   |  or: [ma, sa, mb, sb]
+#'                    aj  ~ gamma(aga, bga)          |
+#'                    bj  ~ gamma(agb, bgb)          |
+#'      'gan_dsc' ->  xij ~ gamma(a, bj) with        |  [a, agb, bgb]
+#'                    bj   ~ gamma(agb, bgb)         |
+#'  -----------------------------------------------------------------------------
+#'
+#'  NB: for n~betabinomial, I can pass one of the following:
+#'  ntrue = list(an=, bn=), or ntrue = list(mn=, varn=)
+#'  i.e., mean and variance prescribed instead of the beta-binomial parameters.
+#'
+#'  NB: for Ptrue, If *-> you can pass vector of means and stdvs instead
+#'  as follows: list(ma=, sa=, mb=, sb=) or list(mc=, sc=, mw=, sw=)
+#'
+#'
+#'   ptrue and ntrue must be named lists
+#'   with parameter names as mentioned above for each distribution
+#'   e.g., pass ptrue = list(pn = 0.4) in case of a binomial distr.
+#'   ptrue = list(muw = 0, muc = 2, sigmac = 0.05, sigmaw = 0.05)
+#'   in case of 'wei_dyl' distribution.
+#'
+#'   Returns a named list containing::
+#'   data   = the matrix with the data, of size S*Nt
+#'   N      = array with number of events / block (length S)
+#'   maxima = array of block maxima (of length S)
+#'   Xi     = sorted annual maxima (length S)
+#'   Fi     = non exceedance frequency of the Xi (length S)
+#'   Tr     = empirical return time of the Xi (length S)
+#'  ------------------------------------------------------------
+#'
+#' @param S length of the time series to be generated (in years / blocks)
+#' @param ptrue list of parameters describing the distribution of event magnitudes
+#' @param ntrue list of parameters describing the distribution of the number of events/block
+#' @param Nt the length of each block (default Nt = 366)
+#' @param ndist distribution of the number of events/block
+#'   (default is ndist='betabin' for the betabinomial distribution)
+#' @param dist distribution of the event magnitudes
+#'   (default is dist='gam' for the gamma distribution)
 #' @export
 load_synth_data <- function(S, ptrue, ntrue, Nt = 366,
                             ndist = 'betabin', dist = 'gam'){
 
-  "----------------------------------------------------------------------------
-   generates a matrix xij of data with dimension S*Nt
-   where S = number of blocks (e.g., years), and
-         Nt = number of observations/block
-   where the number nj of non-zero events in each block follows one
-   of the following distributions::
-   ndist =
-   ----------------------------------------------------------------------------
-      'bin'      -> nj ~ binomial(Nt, pn)
-      'betabin'  -> nj ~ betabinomial(Nt, an, bn) or [mn, varn]
-      'constant' -> nj ~ diracDelta(nc)
-  -----------------------------------------------------------------------------
-  Data are i.i.d., and non-zero events are stacked at the 'beginning' of each
-  block (e.g., their random inter-arrival times are not reproduced here!)
 
-  The magnitudes of the events xij are drawn from one of the following models::
-  -----------------------------------------------------------------------------
-      Model specification:                         | Parameters to pass:
-  -----------------------------------------------------------------------------
-      'gam'     -> xij ~ gamma(a, b)               |  [a, b]
-      'gpd'     -> xij ~ gpd(xi, sigma)            |  [xi, sigma]
-      'wei'     -> xij ~ Weibull(C, w)             |  [C, w]
-      'wei_dyl' -> xij ~ Weibull(Cj, wj) with      |  [muc, sigmac, muw, sigmaw]
-                                                   |  or:   [mc, sc, mw, sw]
-                   Cj  ~ lognormal(muc, sigmac)    |
-                   wj  ~ lognormal(muw, sigmaw)    |
-      'wei_dsl' -> xij ~ Weibull(Cj, w) with       |  [muc, sigmac, w]
-                   Cj  ~ lognormal(muc, sigmac)    |
-      'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  [ac, bc, aw, bw]
-                                                   |  or: [mc, sc, mw, sw]
-                    Cj   ~ gamma(ac, bc)           |
-                    wj   ~ gamma(aw, bw)           |
-      'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  [aga, bga, agb, bgb]
-                                                   |  or: [ma, sa, mb, sb]
-                    aj  ~ gamma(aga, bga)          |
-                    bj  ~ gamma(agb, bgb)          |
-      'gan_dsc' ->  xij ~ gamma(a, bj) with        |  [a, agb, bgb]
-                    bj   ~ gamma(agb, bgb)         |
-  -----------------------------------------------------------------------------
-
-  NB: for n~betabinomial, I can pass one of the following:
-  ntrue = list(an=, bn=), or ntrue = list(mn=, varn=)
-  i.e., mean and variance prescribed instead of the beta-binomial parameters.
-
-  NB: for Ptrue, If *-> you can pass vector of means and stdvs instead
-  as follows: list(ma=, sa=, mb=, sb=) or list(mc=, sc=, mw=, sw=)
-
-
-   ptrue and ntrue must be named lists
-   with parameter names as mentioned above for each distribution
-   e.g., pass ptrue = list(pn = 0.4) in case of a binomial distr.
-   ptrue = list(muw = 0, muc = 2, sigmac = 0.05, sigmaw = 0.05)
-   in case of 'wei_dyl' distribution.
-
-   Returns a named list containing::
-   data   = the matrix with the data, of size S*Nt
-   N      = array with number of events / block (length S)
-   maxima = array of block maxima (of length S)
-   Xi     = sorted annual maxima (length S)
-   Fi     = non exceedance frequency of the Xi (length S)
-   Tr     = empirical return time of the Xi (length S)
-  ------------------------------------------------------------"
   if (ndist == 'bin'){
     nj = rbinom(S, Nt, ntrue$pn)
   } else if (ndist == 'bbn') {
@@ -516,7 +527,48 @@ split_obs_data <- function(df, M_cal = 20,
   return( list(datacal = datacal, dataval = dataval))
 }
 
+#' Fit an extreme value model to data
+#'
+#' @param data matrix with daily precipitation data, with size
+#' (number of blocks)*(number of observations in each block)
+#' so that each row is the sample within one block.
+#' Alternatively, it can be a vector with the block maxima if one sets
+#' the parameter onlymax_gev = TRUE (only for the GEV model).
+#' @param model which extreme value model.
+#'              Default is model='wei_dyn_bin'
+#' @param Mgen Number of samples to draw for the latent level variable models
+#' ( for models of the HBEV family only)
+#' @param thresh_pot threshold for the Peak-Over-Threshold / Point Poisson Process
+#' (default thresh_pot = 10 units) not used by default!
+#' @param thresh_hbev threshold for the hbev family models
+#' (default thresh_pot = 0 units)
+#' @param pot_frac if true, use frac_exc to determine POT model threshold
+#' instead of the given thresh_pot (default TRUE)
+#' @param frac_exc fraction of non-zero observations above threshold
+#' (default is 0.05, for POT model only)
+#' @param iter number of iterations in each chains for HMC.
+#' By default 50% burn it period.
+#' @param chains number of parallel chains for HMC sampler
+#' @param onlymax_gev if TRUE, allow for data = vector of annual maxima
+#' (default FALSE, only for GEV model)
+#' @param refresh To show output or not (default refresh = 0, no output shown)
+#' @param empirical_prior If TRUE, use some empirical priors
+#' (default empirical_prior = FALSE)
+#' @param adapt_delta for HMC sampler (default adapt_delta = 0.8)
+#' @param priorpar to provide specific prior parameter values (default NULL)
+#' @param draw_priors if TRUE produce density for the priors
+#' (mostly for plotting)
 
+#' @return a list with the following quantities:
+#' \describe{
+#'   \item{model}{model name}
+#'   \item{Nt}{number of observations / block}
+#'   \item{prior}{prior distributions used (parameters, type and possibly rng)}
+#'   \item{Mgen}{number of samples for latent level paramaters}
+#'   \item{thresh_pot}{threshold used for POT model}
+#'  \item{thresh_hbev}{threshold used for hbev models}
+#'  \item{model_fit}{Stan object with the model fit}
+#' }
 #' @export
 fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
                          thresh_pot = 10, thresh_hbev = 0.0,
@@ -544,7 +596,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
   'gst' -> gamma static
   *******************************************************************
 
-  For the models of the hbev* family only, use one of the
+  For the models of the hbev* family only, uose one of the
   following models for the number of events/block:
   (not applicabile for GEV; POT uses Poisson model only)
   N_model = 'bin' for Binomial
@@ -678,11 +730,63 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
 }
 
 
+
+
+#' Compute quantiles and goodness of fit measures for a fitted model
+#'
+#' @param model_fit list as returned from the fit_ev_model function
+#' @param maxval array of annual maxima to be used for
+#' model validation and for computing quantiles
+#' @param trmin minimum return time for computing quantiles,
+#' and to be included in the fractional square error / mean bias measures
+#' (default trmin = 2)
+#' @return a list with the following named quantities
+#' \describe{
+#'   \item{qmean}{expected value for the computed quantiles (for Tr >= trmin)}
+#'   \item{qupper}{upper credidility interval for quantiles (prob = 0.95)
+#'   (quantiles only for Tr >= trmin)}
+#'   \item{qlower}{lower credibility interval for quantiles (prob = 0.05)
+#'   (quantiles only for Tr >= trmin)}
+#'   \item{qmedian}{median value of the computed quantiles  (prob = 0.50)
+#'   (quantiles only for Tr >= trmin)}
+#'   \item{fmean}
+#'   \item{fupper}
+#'   \item{flower}
+#'   \item{fmedian}
+#'   \item{dmean}
+#'   \item{dupper}
+#'   \item{dlower}
+#'   \item{dmedian}
+#'   \item{lpml}
+#'   \item{lppd}
+#'   \item{fse}
+#'   \item{mbias}
+#'   \item{fse_Tr}
+#'   \item{bias_Tr}
+#'   \item{elpd_loo}
+#'   \item{p_loo}
+#'   \item{elpd_waic1}
+#'   \item{p_waic1}
+#'   \item{elpd_waic2}
+#'   \item{p_waic2}
+#'   \item{quants}
+#'   \item{cdfs}
+#'   \item{pdfs}
+#'   \item{epsi}
+#'   \item{Fival}
+#'   \item{Trval}
+#'   \item{Xival}
+#'   \item{FivalQ}
+#'   \item{TrvalQ}
+#'   \item{XivalQ}
+#'   \item{log_lik}{log likelihood (nyears*ndraws)}
+#'   \item{model}{name of the model}
+#'   \item{Mgen}{number of draws for latent variable level for hbev models}
+#'   \item{thresh_hbev}{theshold used for the hbev-family models}
+#'   \item{nwarning_x0}{number of warnings for optimization convergence problems}
+#'   }
 #' @export
-comp_quant <- function(model_fit, maxval, trmin = 0){
-  "-------------------
-  some comments
-  -------------------"
+comp_quant <- function(model_fit, maxval, trmin = 2){
   Mgen = model_fit$Mgen
   nwarning_x0 = 0 # if true there are numerical problems with optimization
   Np = length(maxval)     # number of years for the validation
