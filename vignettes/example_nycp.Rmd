@@ -23,7 +23,7 @@ library(extraDistr)
 library(ggplot2)
 # library(tidyr)
 # library(dplyr)
-# library(gridExtra)
+library(gridExtra)
 library(rstan)
 library(bayesplot)
 rstan_options(auto_write = TRUE)
@@ -73,14 +73,15 @@ plot(res$Tr, res$Xi)
 
 compute some basic statistics, such as the observed frequency of extremes
 ```{r}
-Mcal = 10 # length of the sample used for fitting
+Mcal = 50 # length of the sample used for fitting
 fliptime =TRUE # to select it from the end of the dataset
+reshuffle = TRUE
 # first 50 years of the time series
 datasets = split_obs_data(df, M_cal = Mcal,
                            M_val = 270,  # all data for validation
                            Nt = 366,
                            cross_val = FALSE, 
-                           reshuffle = TRUE, 
+                           reshuffle = reshuffle, 
                            flip_time = fliptime,
                            reshuffle_days = FALSE,
                            decluster = FALSE,
@@ -92,7 +93,7 @@ maxima = datasets$dataval$max # annualmaxima for model checking
 
 Fit the HBEV extreme value model
 ```{r}
-dynfit <- fit_ev_model(data, model = 'wei_dyn_bin', iter = iter, chains=chains , 
+dynfit <- fit_ev_model(data, model = 'wei_dgu_bin', iter = iter, chains=chains , 
            Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 400)
 
 
@@ -109,9 +110,16 @@ dynq <- comp_quant(dynfit, maxima, trmin = trmin)
 staq <- comp_quant(stafit, maxima, trmin = trmin)
 
 print(dynq$lppd)
+print(staq$lppd)
+
 print(dynq$lpml)
+print(staq$lpml)
+
 print(dynq$fse)
+print(staq$fse)
+
 print(dynq$mbias)
+print(staq$mbias)
 ```
 
 ```{r}
@@ -169,8 +177,8 @@ plot(fig1)
 And at last a function to plot the posterior predictive distributions for some quantities
 ```{r}
 
-fig2 <- plot_ppd_pdfs(dynfit, datasets$datacal$data, ndraws2plot = 50)
-plot(fig2)
+# fig2 <- plot_ppd_pdfs(dynfit, datasets$datacal$data, ndraws2plot = 50)
+# plot(fig2)
 # ggsave(file.path(outplot, 'example_ppdf_pdf.png'), plot=fig2, device = 'png',
 #                        width = 14, height = 6)
 ```

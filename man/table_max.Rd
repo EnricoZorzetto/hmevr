@@ -2,20 +2,51 @@
 % Please edit documentation in R/hbev_module.R
 \name{table_max}
 \alias{table_max}
-\title{Compute yearly rainfall statistics from a time series}
+\title{Compute block (yearly) rainfall statistics for a rainfall dataset.}
 \usage{
 table_max(df, Nt = 366, reshuffle_days = FALSE)
 }
 \arguments{
-\item{df}{A data frame with the data.}
+\item{df}{A data frame with the precipitation data. It must be a data frame
+with fields PRCP and YEAR (integer in format YYYY)}
 
-\item{Nt}{= 366 The number of events / year.}
+\item{Nt}{The number of events/year (default is 366). If record length in an
+year is shorter than Nt, zero values are added.
+If longer, excess values are dropped.}
 
-\item{reshuffle_days}{= FALSE wether or not reshuffle the days.}
+\item{reshuffle_days}{if TRUE, the number of events/block
+and the intensities of all events
+in the time series are
+resampled without resubstitution
+(default is FALSE)}
 }
 \value{
-a list with various statistics.
+a list with the following quantities:
+\describe{
+  \item{data}{matrix of size nyears*Nt with the daily values}
+  \item{max}{block maxima values (array with length = nyears)}
+  \item{Xi}{annual maxima sorted in ascending order (array of size nyears)}
+  \item{Fi}{ Empirical non exceedance frequency for the annual maxima Xi
+        (array of size nyears)
+        computed by means of the Weibull plotting position formula}
+  \item{Tr}{ Empirical return time for the annual maxima Xi
+        (array of size nyears)
+        computed by means of the Weibull plotting position formula}
+ \item{N}{number of events in each year (array of size nyears)}
+ \item{years}{years in the dataset (array of size nyears)}
+ \item{nyears}{number of years in the dataset}
+ \item{min}{block minima of non-zero values in each year of record
+       (array of size nyears)}
+ \item{totals}{yearly precipitation totals (array of size nyears)}
+ \item{sdwets}{standard deviation of non-zero precipitation values
+       for each year (array of size nyears)}
+ \item{skews}{skewness of non-zero precipitation values
+       for each year (array of size nyears)}
+}
 }
 \description{
-Compute yearly rainfall statistics from a time series
+Compute block (yearly) rainfall statistics for a rainfall dataset.
+}
+\examples{
+table_max(nycp)
 }

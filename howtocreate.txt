@@ -4,7 +4,7 @@ Install package with
 
 install.packages('../hbevr', repos = NULL, type="source")
 
-devtools.document()
+devtools::document()
 
 
 usethis::use_package('rstan')
