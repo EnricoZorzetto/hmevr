@@ -1,0 +1,37 @@
+Package: hbevr
+Title: Hierarchical Bayesian Extreme Value in R
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Enrico",
+           family = "Zorzetto",
+           role = c("aut", "cre"),
+           email = "enrico.zorzetto@duke.edu",
+           comment = structure("YOUR-ORCID-ID", .Names = "ORCID"))
+Description: What the package does (one paragraph).
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Biarch: true
+Depends: 
+    R (>= 3.4.0)
+Imports: 
+    Rcpp (>= 0.12.0),
+    rstan (>= 2.18.1),
+    rstantools (>= 2.0.0),
+    extraDistr (>= 1.8.11),
+    ggplot2 (>= 3.2.1),
+    bayesplot (>= 1.7.0),
+    nleqslv (>= 3.3.2)
+LinkingTo: 
+    BH (>= 1.66.0),
+    Rcpp (>= 0.12.0),
+    RcppEigen (>= 0.3.3.3.0),
+    rstan (>= 2.18.1),
+    StanHeaders (>= 2.18.0)
+SystemRequirements: GNU make
+RoxygenNote: 7.0.0
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

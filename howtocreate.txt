@@ -1,0 +1,10 @@
+
+use usethis::use_fun() instead of devtools::use_fun()
+Install package with
+
+install.packages('../hbevr', repos = NULL, type="source")
+
+devtools.document()
+
+
+usethis::use_package('rstan')

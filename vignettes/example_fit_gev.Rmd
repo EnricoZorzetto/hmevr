@@ -1,0 +1,63 @@
+---
+title: "example_fit_gev"
+author: "Enrico Zorzetto"
+date: "` r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{example_fit_gev}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(extRemes)
+library(extraDistr)
+library(rstan)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+library(hbevr)
+```
+
+# Generate synthetic data from GEV with known parameters
+```{r}
+mu_true = 100
+xi_true = 0.1
+sigma_true = 5
+ssize = 60
+sample = extraDistr::rgev(ssize, mu = mu_true, sigma = sigma_true, xi = xi_true)
+```
+
+# Fit the GEV model
+```{r}
+# fit stan model
+gevfit <- hbevr::fit_ev_model(sample, model='gev', onlymax_gev = TRUE)
+```
+
+# compute GEV quantiles
+```{r}
+# compute quantiles
+gevq = hbevr::comp_quant(gevfit, sample)
+```
+
+# Plot the result
+```{r}
+plot(gevq$Trval, gevq$XivalQ)
+lines(gevq$Trval, gevq$qmean,  col='red', lty = 'solid')
+lines(gevq$Trval, gevq$qupper, col='red', lty = 'dashed')
+lines(gevq$Trval, gevq$qlower, col='red', lty = 'dashed')
+
+```
+
+
+
+
+
+
+
