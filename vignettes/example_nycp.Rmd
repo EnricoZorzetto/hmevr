@@ -73,7 +73,7 @@ plot(res$Tr, res$Xi)
 
 compute some basic statistics, such as the observed frequency of extremes
 ```{r}
-Mcal = 50 # length of the sample used for fitting
+Mcal = 10 # length of the sample used for fitting
 fliptime =TRUE # to select it from the end of the dataset
 reshuffle = TRUE
 # first 50 years of the time series
@@ -92,13 +92,18 @@ maxima = datasets$dataval$max # annualmaxima for model checking
 ```
 
 Fit the HBEV extreme value model
+
+Let us compare the static and dynamic hbev models with p(n) binomial,
+and a dynamic model with p(n) beta-binomial (i.e., the binomial rate is also changing year to year)
 ```{r}
 dynfit <- fit_ev_model(data, model = 'wei_dgu_bin', iter = iter, chains=chains , 
-           Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 400)
+           Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 0)
 
+dbbfit <- fit_ev_model(data, model = 'wei_dgu_bbn', iter = iter, chains=chains , 
+           Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 0)
 
 stafit <- fit_ev_model(data, model = 'wei_sta_bin', iter = iter, chains=chains , 
-           Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 400)
+           Mgen = Mgen, adapt_delta = adapt_delta, thresh_hbev = thresh_hbev, refresh = 0)
 
 
 ```
@@ -107,6 +112,7 @@ Compute extreme value quantiles from the fitted model, and compute some
 goodness of fit measures based on the validation data
 ```{r}
 dynq <- comp_quant(dynfit, maxima, trmin = trmin)
+dbbq <- comp_quant(dbbfit, maxima, trmin = trmin)
 staq <- comp_quant(stafit, maxima, trmin = trmin)
 
 print(dynq$lppd)
@@ -136,6 +142,10 @@ p1 <- ggplot() +
   geom_line(aes(  dynq$TrvalQ, dynq$qmean),  linetype="solid",color= "blue") +
   geom_line(aes(  dynq$TrvalQ, dynq$qupper), linetype="dashed",color="blue") +
   geom_line(aes(  dynq$TrvalQ, dynq$qlower), linetype="dashed",color="blue") +
+  
+  geom_line(aes(  dbbq$TrvalQ, dbbq$qmean),  linetype="solid",color= "orange") +
+  geom_line(aes(  dbbq$TrvalQ, dbbq$qupper), linetype="dashed",color="orange") +
+  geom_line(aes(  dbbq$TrvalQ, dbbq$qlower), linetype="dashed",color="orange") +
 
 coord_trans(x="log10", y = 'log10') +
   labs(y = "Quantile [mm/day]", x= "Return Time [years]") +
@@ -153,6 +163,10 @@ p2 <- ggplot() +
   geom_line(aes(  staq$Xival, staq$fmean),  linetype="solid",color= "green") +
   geom_line(aes(  staq$Xival, staq$fupper), linetype="dashed",color="green") +
   geom_line(aes(  staq$Xival, staq$flower), linetype="dashed",color="green") +
+  
+  geom_line(aes(  dbbq$Xival, dbbq$fmean),  linetype="solid",color= "orange") +
+  geom_line(aes(  dbbq$Xival, dbbq$fupper), linetype="dashed",color="orange") +
+  geom_line(aes(  dbbq$Xival, dbbq$flower), linetype="dashed",color="orange") +
 
 coord_trans(x="log10") +
   labs(y = "P(X < x)", x= "Quantile x [mm/day]") +
@@ -167,7 +181,7 @@ clrs <- color_scheme_get("brightblue")
 
 
 
-listq = list(dynq, staq)
+listq = list(dynq, staq, dbbq)
 fig1 = plot_quants(listq)
 plot(fig1)
 

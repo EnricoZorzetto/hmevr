@@ -188,6 +188,21 @@ table_max <- function(df, Nt = 366, reshuffle_days = FALSE){
 #'   (default is ndist='betabin' for the betabinomial distribution)
 #' @param dist distribution of the event magnitudes
 #'   (default is dist='gam' for the gamma distribution)
+#'
+#' @return a list with the following quantities:
+#' \describe{
+#'   \item{data}{matrix of size nyears*Nt with the daily values.
+#'     Each row is an yearly sample}
+#'   \item{maxima}{block maxima values (array with length = nyears)}
+#'   \item{Xi}{annual maxima sorted in ascending order (array of size nyears)}
+#'   \item{Fi}{ Empirical non exceedance frequency for the annual maxima Xi
+#'         (array of size nyears)
+#'         computed by means of the Weibull plotting position formula}
+#'   \item{Tr}{ Empirical return time for the annual maxima Xi
+#'         (array of size nyears)
+#'         computed by means of the Weibull plotting position formula}
+#'  \item{N}{number of events in each year (array of size nyears)}
+#'
 #' @export
 load_synth_data <- function(S, ptrue, ntrue, Nt = 366,
                             ndist = 'betabin', dist = 'gam'){
@@ -247,6 +262,11 @@ for (j in 1:S){
       Cj = rgamma(1, ptrue$ac, ptrue$bc)
       wj = rgamma(1, ptrue$aw, ptrue$bw)
       data[j,1:nj[j]] = rweibull(nj[j], wj, Cj)
+  } else if (dist == 'wei_dgu'){
+      # print('Hello World!')
+      Cj = extraDistr::rgumbel(1, mu = ptrue$mc, sigma = ptrue$sc)
+      wj = extraDistr::rgumbel(1, mu = ptrue$mw, sigma = ptrue$sw)
+      data[j,1:nj[j]] = rweibull(nj[j], wj, Cj)
   } else if (dist == 'gam_dyn'){
 
     if (is.null(ptrue[["aga"]]) ){
@@ -273,7 +293,15 @@ for (j in 1:S){
           Xi = Xi, Fi = Fi, Tr = Tr))
 }
 
-
+#' Load a dataset of rainfall observations
+#'
+#' @param filepath
+#' @param readdata
+#' @param maxmiss
+#' @param min_nevents
+#' @param dividebyten
+#' @param Nt
+#' @return df, dataframe with the precipitation data
 #' @export
 load_obs_data <- function(filepath, readdata=TRUE,
                           maxmiss = 30, min_nevents = 0,
