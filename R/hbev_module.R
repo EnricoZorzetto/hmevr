@@ -694,7 +694,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
       thresh_pot = quantile(wets, 1-frac_exc)
     }
     print(sprintf('pot-ppp: threshold value = %s', thresh_pot))
-
+    # print("Hello World!")
     maxima = apply(data, 1, max)
     # print(length(maxima))
     Nex = array(0, nyears)
@@ -728,7 +728,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     #                   refresh = refresh,
     #                 control = list(adapt_delta = adapt_delta))
 
-        model_fit = rstan:sampling(stanmodels[[model]], data = model_data,
+        model_fit = rstan::sampling(stanmodels[[model]], data = model_data,
                       chains = chains, iter=iter,
                       refresh = refresh,
                     control = list(adapt_delta = adapt_delta))
