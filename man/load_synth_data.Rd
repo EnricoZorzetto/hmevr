@@ -29,6 +29,9 @@ load_synth_data(S, ptrue, ntrue, Nt = 366, ndist = "betabin", dist = "gam")
 \item{dist}{distribution of the event magnitudes
 (default is dist='gam' for the gamma distribution)}
 }
+\value{
+
+}
 \description{
 ----------------------------------------------------------------------------
      'bin'      -> nj ~ binomial(Nt, pn)

@@ -870,6 +870,7 @@ BB_meanvar <-function(a, b, Nt = 365){
 
 
 
+#' @export
 decluster <- function(datamat, up_to = 50, first_indep = 50, maxlag = 365,
                       #upper_quantile = 0.9,
                       tau_max = 5,

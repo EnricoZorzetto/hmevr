@@ -3,7 +3,7 @@ use usethis::use_fun() instead of devtools::use_fun()
 Install package with
 
 install.packages('../hbevr', repos = NULL, type="source")
-
+install.packages('/home/enrico/Projects/hbevr', repos = NULL, type="source")
 devtools::document()
 
 
