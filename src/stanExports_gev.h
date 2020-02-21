@@ -33,7 +33,7 @@ static int current_statement_begin__;
 stan::io::program_reader prog_reader__() {
     stan::io::program_reader reader;
     reader.add_event(0, 0, "start", "model_gev");
-    reader.add_event(88, 86, "end", "model_gev");
+    reader.add_event(89, 87, "end", "model_gev");
     return reader;
 }
 template <bool propto, typename T0__, typename T1__, typename T2__, typename T3__>
@@ -386,11 +386,11 @@ public:
             // model body
             current_statement_begin__ = 67;
             lp_accum__.add(normal_log<propto__>(mu, get_base1(pr_mu, 1, "pr_mu", 1), get_base1(pr_mu, 2, "pr_mu", 1)));
-            current_statement_begin__ = 69;
-            lp_accum__.add(lognormal_log<propto__>(psi, get_base1(pr_psi, 1, "pr_psi", 1), get_base1(pr_psi, 2, "pr_psi", 1)));
-            current_statement_begin__ = 71;
+            current_statement_begin__ = 70;
+            lp_accum__.add(gamma_log<propto__>(psi, get_base1(pr_psi, 1, "pr_psi", 1), get_base1(pr_psi, 2, "pr_psi", 1)));
+            current_statement_begin__ = 72;
             lp_accum__.add(normal_log<propto__>(k, get_base1(pr_k, 1, "pr_k", 1), get_base1(pr_k, 2, "pr_k", 1)));
-            current_statement_begin__ = 73;
+            current_statement_begin__ = 74;
             lp_accum__.add(gev_lpdf<propto__>(y, mu, k, psi, pstream__));
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());
@@ -464,40 +464,40 @@ public:
             if (!include_gqs__ && !include_tparams__) return;
             if (!include_gqs__) return;
             // declare and define generated quantities
-            current_statement_begin__ = 76;
+            current_statement_begin__ = 77;
             validate_non_negative_index("yrep", "Mgen", Mgen);
             std::vector<double> yrep(Mgen, double(0));
             stan::math::initialize(yrep, DUMMY_VAR__);
             stan::math::fill(yrep, DUMMY_VAR__);
-            current_statement_begin__ = 77;
+            current_statement_begin__ = 78;
             validate_non_negative_index("log_lik", "N", N);
             std::vector<double> log_lik(N, double(0));
             stan::math::initialize(log_lik, DUMMY_VAR__);
             stan::math::fill(log_lik, DUMMY_VAR__);
             // generated quantities statements
-            current_statement_begin__ = 78;
+            current_statement_begin__ = 79;
             for (int i = 1; i <= Mgen; ++i) {
-                current_statement_begin__ = 79;
+                current_statement_begin__ = 80;
                 stan::model::assign(yrep, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             gev_rng(mu, k, psi, base_rng__, pstream__), 
                             "assigning variable yrep");
             }
-            current_statement_begin__ = 81;
+            current_statement_begin__ = 82;
             for (int i = 1; i <= N; ++i) {
-                current_statement_begin__ = 82;
+                current_statement_begin__ = 83;
                 stan::model::assign(log_lik, 
                             stan::model::cons_list(stan::model::index_uni(i), stan::model::nil_index_list()), 
                             gev_lpdf(rep_vector(get_base1(y, i, "y", 1), 1), mu, k, psi, pstream__), 
                             "assigning variable log_lik");
             }
             // validate, write generated quantities
-            current_statement_begin__ = 76;
+            current_statement_begin__ = 77;
             size_t yrep_k_0_max__ = Mgen;
             for (size_t k_0__ = 0; k_0__ < yrep_k_0_max__; ++k_0__) {
                 vars__.push_back(yrep[k_0__]);
             }
-            current_statement_begin__ = 77;
+            current_statement_begin__ = 78;
             size_t log_lik_k_0_max__ = N;
             for (size_t k_0__ = 0; k_0__ < log_lik_k_0_max__; ++k_0__) {
                 vars__.push_back(log_lik[k_0__]);

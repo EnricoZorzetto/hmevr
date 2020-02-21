@@ -38,8 +38,10 @@ a list with the following named quantities
   \item{lppd}
   \item{fse}
   \item{mbias}
+  \item{mwidth}
   \item{fse_Tr}
   \item{bias_Tr}
+  \item{wisth_Tr}
   \item{elpd_loo}
   \item{p_loo}
   \item{elpd_waic1}

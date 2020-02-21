@@ -13,7 +13,7 @@ functions {
   //     return -N*log(psi) - sum( (y - mu)/psi + exp(-(y - mu)/psi) );
   // }
         real gev_lpdf(vector y, real mu, real k, real psi) {
-    // gev log pdf 
+    // gev log pdf
     // int N = rows(y);
     real N = rows(y);
     real inv_k = inv(k);
@@ -60,13 +60,14 @@ parameters {
     real<lower=0> psi;
     real <lower = min_y, upper = max_y> mu;
     real<lower= psi/(mu-max_y - myeps), upper= psi/(mu-min_y + myeps)> k;
-    // real<lower= sigma/(mu - max_y), upper= sigma/(mu - min_y)> k; 
+    // real<lower= sigma/(mu - max_y), upper= sigma/(mu - min_y)> k;
 }
 model {
     // Priors:
     mu ~ normal(pr_mu[1], pr_mu[2]);
     // mu ~ normal(pr_mu[1], pr_mu[2])T[min_y-1e-1, max_y+1e-1];
-    psi ~ lognormal(pr_psi[1], pr_psi[2]);
+    // psi ~ lognormal(pr_psi[1], pr_psi[2]);
+    psi ~ gamma(pr_psi[1], pr_psi[2]);
     // k ~ normal(pr_k[1], pr_k[2])T[sigma/(mu-max_y), sigma/(mu-min_y)];
     k ~ normal(pr_k[1], pr_k[2]);
     // Model::

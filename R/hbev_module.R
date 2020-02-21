@@ -604,7 +604,9 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
                          iter = 1000, chains = 4,
                          onlymax_gev = FALSE, refresh = 0,
                          empirical_prior = FALSE,
-                         adapt_delta = 0.8, priorpar = NULL,
+                         adapt_delta = 0.8,
+                         max_treedepth = 10,
+                         priorpar = NULL,
                          draw_priors=FALSE)
 {
   "-------------------------------------------------------------------
@@ -674,8 +676,9 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     mean_y = mean(maxima)
     sd_y   = sd(maxima)
     pr_mu = c(mean_y, 0.3*mean_y)   # normal mu, sigma
-    pr_psi = c(log(sd_y), 0.3)    # lognormal mu, sigma
-    pr_k = c(0.1, 0.2)           # normal mu, sigma
+    # pr_psi = c(log(sd_y), 0.3)    # lognormal mu, sigma
+    pr_psi = c(0.5*sd_y, 0.5)    # gamma mu, sigma
+    pr_k = c(0.1, 0.1)           # normal mu, sigma
     priorlist = list(pr_mu=pr_mu, pr_psi=pr_psi, pr_k=pr_k)
     model_data0 <- list(N=length(maxima), y=maxima, Mgen=Mgen)
     model_data = append(model_data0, priorlist)
@@ -684,7 +687,8 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     model_fit  <- rstan::sampling(stanmodels[[model]], data = model_data,
                        chains = chains, iter = iter,
                        init_r = 0.02, refresh = refresh,
-                    control = list(adapt_delta = adapt_delta))
+                    control = list(adapt_delta = adapt_delta,
+                                   max_treedepth = max_treedepth))
   }
   else if (model == 'pot_ppp'){
     print(sprintf('Fitting the %s model', model))
@@ -711,7 +715,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     # pr_sigma = c(0.4*sd_y, 0.4)  # gamma a, b
     # pr_xi01 = c(9,6)             # beta a, b
     pr_sigma = c(0.5*sd_y, 0.5)    # gamma mu, sigma
-    pr_k = c(0.1, 0.2)             # normal mu, sigma [truncated]
+    pr_k = c(0.1, 0.1)             # normal mu, sigma [truncated]
     # pr_lambda = c(1.2, 0.1)      # gamma a, b for Poisson
     pr_lambda = c(2, 0.5)      # gamma a, b for Poisson
     print(sprintf('pot-ppp: %s excesses in %s years', length(exceedances), nyears))
@@ -731,7 +735,8 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
         model_fit = rstan::sampling(stanmodels[[model]], data = model_data,
                       chains = chains, iter=iter,
                       refresh = refresh,
-                    control = list(adapt_delta = adapt_delta))
+                    control = list(adapt_delta = adapt_delta,
+                                   max_treedepth = max_treedepth))
   }  else {
     # FIT HBEV MODEL
   print(sprintf('Fitting the %s model', model))
@@ -750,7 +755,8 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
   modelfile = sprintf('%s.stan',model)
   model_fit <- rstan::sampling(stanmodels[[model]], data = model_data,
                     iter = iter, chains = chains, refresh = refresh,
-                    control = list(adapt_delta = adapt_delta))
+                    control = list(adapt_delta = adapt_delta,
+                                   max_treedepth = max_treedepth))
   }
     return( list(model = model, Nt = Nt, prior = priorlist, Mgen=Mgen,
                thresh_pot = thresh_pot, thresh_hbev = thresh_hbev,
@@ -789,8 +795,10 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
 #'   \item{lppd}
 #'   \item{fse}
 #'   \item{mbias}
+#'   \item{mwidth}
 #'   \item{fse_Tr}
 #'   \item{bias_Tr}
+#'   \item{wisth_Tr}
 #'   \item{elpd_loo}
 #'   \item{p_loo}
 #'   \item{elpd_waic1}
@@ -1098,7 +1106,15 @@ comp_quant <- function(model_fit, maxval, trmin = 2){
                 }
             }
           }
-  }
+    }
+  # compute uncertainty bands and average / mean values
+  qmean =  apply(quants, 2, mean)
+  qquant = apply(quants, 2, quantile, prob = c(0.05, 0.5, 0.95))
+  fmean = apply(cdfs, 2, mean)
+  fquant = apply(cdfs, 2, quantile, prob = c(0.05, 0.5, 0.95))
+  dmean = apply(pdfs, 2, mean)
+  dquant = apply(pdfs, 2, quantile, prob = c(0.05, 0.5, 0.95))
+
   # now compute some goodness of fit measures
     # such as CPOi and LPML, LPPD, and FSE
 
@@ -1106,13 +1122,17 @@ comp_quant <- function(model_fit, maxval, trmin = 2){
 
   # COMPUTE THE FRACTIONAL SQUARE ERROR ABOVE THE GIVEN TRMIN:
   fse_Tr = rep(NA, NpQ) # fractional seuare error for a given non exceedance frequency
-  bias_Tr = rep(NA, NpQ) # fractional seuare error for a given non exceedance frequency
+  bias_Tr = rep(NA, NpQ) # bias
+  width_Tr = rep(NA, NpQ) # width of credibility interval
   for (i in 1:NpQ){
     fse_Tr[i]  = sqrt( mean(epsi[,i]^2)) # averaged over the S draws from the posterior
     bias_Tr[i] = mean(epsi[, i])
+    # width_Tr[i] = qupper[i] - qlower[i]
+    width_Tr[i] = qquant[3, i] - qquant[1, i]
   }
   fse = mean(fse_Tr)
   mbias = mean(bias_Tr)
+  mwidth = mean(width_Tr)
 
   log_lik = log(pdfs)
 
@@ -1144,13 +1164,6 @@ comp_quant <- function(model_fit, maxval, trmin = 2){
   # elpd_loo = 0
 
 
-  # compute uncertainty bands and average / mean values
-  qmean =  apply(quants, 2, mean)
-  qquant = apply(quants, 2, quantile, prob = c(0.05, 0.5, 0.95))
-  fmean = apply(cdfs, 2, mean)
-  fquant = apply(cdfs, 2, quantile, prob = c(0.05, 0.5, 0.95))
-  dmean = apply(pdfs, 2, mean)
-  dquant = apply(pdfs, 2, quantile, prob = c(0.05, 0.5, 0.95))
 
   return( list(qmean = qmean, qupper = qquant[3,],
                qlower = qquant[1, ], qmedian = qquant[2, ],
@@ -1161,6 +1174,7 @@ comp_quant <- function(model_fit, maxval, trmin = 2){
                lpml = infc$lpml, lppd = infc$lppd,
                fse = fse, fse_Tr = fse_Tr,
                mbias = mbias, bias_Tr = bias_Tr,
+               mwidth = mwidth, width_Tr = width_Tr,
                elpd_loo = infc$elpd_loo, p_loo = infc$p_loo,
                elpd_waic1 = infc$elpd_waic1, elpd_waic2 = infc$elpd_waic2,
                p_waic1 = infc$p_waic1, p_waic2 = infc$p_waic2,
