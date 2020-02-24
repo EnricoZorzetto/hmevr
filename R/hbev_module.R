@@ -678,7 +678,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     pr_mu = c(mean_y, 0.3*mean_y)   # normal mu, sigma
     # pr_psi = c(log(sd_y), 0.3)    # lognormal mu, sigma
     pr_psi = c(0.5*sd_y, 0.5)    # gamma mu, sigma
-    pr_k = c(0.1, 0.1)           # normal mu, sigma
+    pr_k = c(0.114, 0.125)           # normal mu, sigma
     priorlist = list(pr_mu=pr_mu, pr_psi=pr_psi, pr_k=pr_k)
     model_data0 <- list(N=length(maxima), y=maxima, Mgen=Mgen)
     model_data = append(model_data0, priorlist)
@@ -715,7 +715,7 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
     # pr_sigma = c(0.4*sd_y, 0.4)  # gamma a, b
     # pr_xi01 = c(9,6)             # beta a, b
     pr_sigma = c(0.5*sd_y, 0.5)    # gamma mu, sigma
-    pr_k = c(0.1, 0.1)             # normal mu, sigma [truncated]
+    pr_k = c(0.114, 0.125)             # normal mu, sigma [truncated]
     # pr_lambda = c(1.2, 0.1)      # gamma a, b for Poisson
     pr_lambda = c(2, 0.5)      # gamma a, b for Poisson
     print(sprintf('pot-ppp: %s excesses in %s years', length(exceedances), nyears))

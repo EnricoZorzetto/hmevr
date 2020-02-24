@@ -52,9 +52,9 @@
 
     # weibull models
       inf_mc0 = 10, # the larger the more informative the prior
-      inf_sc0 = 100,
+      inf_sc0 = 10,
       inf_mw0 = 10,
-      inf_sw0 = 100,
+      inf_sw0 = 10,
       exp_sc0 = 0.2, # as a fraction of expected mc
       exp_sw0 = 0.1, # as a fraction of expected mw
       inf_c0 = 1,
@@ -63,6 +63,10 @@
       exp_w0 =  1,
       exp_mc0 = 1, # as a fraction of expected mc
       exp_mw0 = 1, # as a fraction of expected mc
+      # dynamic Gumbel model:
+      # the other are like weibull dynamic
+      gu_exp_sc0 = 0.3,
+      gu_exp_sw0 = 0.1,
 
       # mixed weibull models:
       inf_mc10 = 100, # the larger the more informative the prior
@@ -146,12 +150,8 @@
   sn_charvar_c = 0.3,
   sn_charvar_w = 0.1,
   sn_shape_c = 4,
-  sn_shape_w = 4,
+  sn_shape_w = 4
 
-  # dynamic Gumbel model:
-  # the other are like weibull dynamic
-  gu_exp_sc0 = 0.2,
-  gu_exp_sw0 = 0.05
 
   )
 
@@ -596,6 +596,7 @@ rmixweibull <- function(Ngen, C1, w1, C2, w2, alp){
 }
 
 
+#' @export
 hbev_wei_cdf <- function(x, C = C, W = W, N = N){
   # only for scalar x!
   cdf = mean(   pweibull(x, W, C )^N  )
@@ -603,10 +604,144 @@ return(cdf)
 }
 
 
+#' @export
 hbev_wei_pdf <- function(x, C = C, W = W, N = N){
   # only for scalar x!
   pdf = mean( N*pweibull(x, W, C)^(N-1)*dweibull(x, W, C))
 return(pdf)
+}
+
+
+#' @export
+hbev_wei_quant <- function(p, C = C, W = W, N = N){
+  # only for scalar x!
+  myfunq <-function(x) hbev_wei_cdf(x, C=C, W=W, N=N) - p
+  F0 <- p
+  x0 <- mean(C)*(log(mean(N)/(1-F0)))^(1/mean(W))
+  optim <- nleqslv(x0, myfunq)
+  quant <- optim$x
+  return(quant)
+}
+
+
+#' @export
+dhbev <- function(x, ptrue = ptrue, ntrue = ntrue,
+                  pdistr = 'wei_dgu' , ndistr = 'bin',
+                  Nt=366, nsamples = 50){
+  # compute theoretical hbev cdf for the values in x (or Tr)
+  # if nsamples = 1, draw from the static model with C=mc, W=mw
+
+  if (ndistr == 'bin'){
+      Ngen = rbinom(nsamples, Nt, ntrue$pn)
+  } else if (ndistr == 'bbn') {
+      Ngen = extraDistr::rbbinom(nsamples, Nt, alpha = ntrue$an, beta = ntrue$bn)
+  }
+
+  if (pdistr == 'wei_dgu'){
+      Cgen = extraDistr::rgumbel(nsamples, mu = mctrue, sigma = sctrue)
+      Wgen = extraDistr::rgumbel(nsamples, mu = mwtrue, sigma = swtrue)
+  } else if (pdistr == 'wei_dyn'){
+      Cgen = rgamma(nsamples, ptrue$ac, ptrue$bc)
+      Wgen = rgamma(nsamples, ptrue$aw, ptrue$bw)
+  } else if (pdistr == 'wei'){
+      Cgen = rep(nsamples, ptrue$C)
+      Wgen = rep(nsamples, ptrue$w)
+  }
+    Nx = length(x)
+    res = rep(0, Nx)
+    for (i in 1:Nx){
+      res[i] <-  hbev_wei_pdf(x[i], C=Cgen, W=Wgen, N=Ngen)
+    }
+    return(res)
+}
+
+#' @export
+rhbev <- function(n, ptrue = ptrue, ntrue = ntrue,
+                  pdistr = 'wei_dgu' , ndistr = 'bin',
+                  Nt=366, nsamples = 50){
+  # draw n annual maxima from hbev distribution
+  u <- runif(n)
+  res <- qhbev(u, ptrue = ptrue, ntrue = ntrue,
+               pdistr = pdistr, ndistr = ndistr,
+               Nt = Nt, nsamples = nsamples)
+
+  return(res)
+}
+
+#' @export
+phbev <- function(x, ptrue = ptrue, ntrue = ntrue,
+                  pdistr = 'wei_dgu' , ndistr = 'bin',
+                  Nt=366, nsamples = 50, Tr = FALSE){
+  # compute theoretical hbev cdf for the values in x (or Tr)
+  # if nsamples = 1, draw from the static model with C=mc, W=mw
+
+  if (ndistr == 'bin'){
+      Ngen = rbinom(nsamples, Nt, ntrue$pn)
+  } else if (ndistr == 'bbn') {
+      Ngen = extraDistr::rbbinom(nsamples, Nt, alpha = ntrue$an, beta = ntrue$bn)
+  }
+  if (pdistr == 'wei_dgu'){
+      Cgen = extraDistr::rgumbel(nsamples, mu = mctrue, sigma = sctrue)
+      Wgen = extraDistr::rgumbel(nsamples, mu = mwtrue, sigma = swtrue)
+  } else if (pdistr == 'wei_dyn'){
+      Cgen = rgamma(nsamples, ptrue$ac, ptrue$bc)
+      Wgen = rgamma(nsamples, ptrue$aw, ptrue$bw)
+  } else if (pdistr == 'wei'){
+      Cgen = rep(nsamples, ptrue$C)
+      Wgen = rep(nsamples, ptrue$w)
+  }
+    Nx = length(x)
+    res = rep(0, Nx)
+    for (i in 1:Nx){
+      res[i] <-  hbev_wei_cdf(x[i], C=Cgen, W=Wgen, N=Ngen)
+    }
+    if (Tr == TRUE){
+      res = 1/(1-res)
+    }
+    return(res)
+}
+
+#' @export
+qhbev <- function(fi, ptrue = ptrue, ntrue = ntrue,
+                  pdistr = 'wei_dgu' , ndistr = 'bin',
+                  Nt=366, nsamples = 50, Tr = FALSE){
+  # compute theoretical hbev quantiles for the values in fi.
+  # values in fi must be non exceedance probabilities or return times
+  # (second option only if fromTr= FALSE)
+  # if nsamples = 1, draw from the static model with C=mc, W=mw
+  if (Tr == FALSE){
+    Fi = fi
+    if (!(max(Fi)<1)){
+      print('phbev ERROR: check if Fi or Tr')
+    }
+  } else {
+    Tr = fi
+    Fi = 1-1/Tr
+    if (!(min(Tr)>1)){
+      print('phbev ERROR: check if Fi or Tr')
+    }
+  }
+  if (ndistr == 'bin'){
+      Ngen = rbinom(nsamples, Nt, ntrue$pn)
+  } else if (ndistr == 'bbn') {
+      Ngen = extraDistr::rbbinom(nsamples, Nt, alpha = ntrue$an, beta = ntrue$bn)
+  }
+  if (pdistr == 'wei_dgu'){
+      Cgen = extraDistr::rgumbel(nsamples, mu = mctrue, sigma = sctrue)
+      Wgen = extraDistr::rgumbel(nsamples, mu = mwtrue, sigma = swtrue)
+  } else if (pdistr == 'wei_dyn'){
+      Cgen = rgamma(nsamples, ptrue$ac, ptrue$bc)
+      Wgen = rgamma(nsamples, ptrue$aw, ptrue$bw)
+  } else if (pdistr == 'wei'){
+      Cgen = rep(nsamples, ptrue$C)
+      Wgen = rep(nsamples, ptrue$w)
+  }
+    Nx = length(fi)
+    res = rep(0, Nx)
+    for (i in 1:Nx){
+      res[i] <- hbev_wei_quant(Fi[i], C=Cgen, W=Wgen, N=Ngen)
+    }
+    return(res)
 }
 
 
