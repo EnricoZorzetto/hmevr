@@ -18,6 +18,7 @@ fit_ev_model(
   refresh = 0,
   empirical_prior = FALSE,
   adapt_delta = 0.8,
+  max_treedepth = 10,
   priorpar = NULL,
   draw_priors = FALSE
 )
