@@ -65,8 +65,8 @@
       exp_mw0 = 1, # as a fraction of expected mc
       # dynamic Gumbel model:
       # the other are like weibull dynamic
-      gu_exp_sc0 = 0.3,
-      gu_exp_sw0 = 0.1,
+      gu_exp_sc0 = 0.25,
+      gu_exp_sw0 = 0.05,
 
       # mixed weibull models:
       inf_mc10 = 100, # the larger the more informative the prior
