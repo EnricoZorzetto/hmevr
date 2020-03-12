@@ -5,13 +5,15 @@
 #' @param df A data frame with the precipitation data. It must be a data frame
 #'           with fields PRCP (daily precipitation) and
 #'           YEAR (integer in format YYYY)
-#' @param Nt The number of events/year (default is Nt = 366). If record length in an
-#'           year is shorter than Nt, zero values are added.
+#' @param Nt The number of events/year (default is Nt = 366).
+#'           If record length in an
+#'           year is shorter than Nt, zero values are added
+#'           so that each block has the same length.
 #'           If longer, excess values are dropped.
 #' @param reshuffle_days if TRUE, the number of events/block
 #'                    and the intensities of all events
 #'                    in the time series are
-#'                    resampled without resubstitution
+#'                    resampled without resubstitution.
 #'                    (default is reshuffle_days = FALSE)
 #' @return a list with the following quantities:
 #' \describe{
@@ -117,45 +119,18 @@ table_max <- function(df, Nt = 366, reshuffle_days = FALSE){
 
 #'   Generate syntetic data according to a given specification.
 #'   generates a matrix xij of synthetic data with dimension S*Nt
-#'   where S = number of blocks (e.g., years), and
+#'   where S = number of blocks (e.g., number of years), and
 #'         Nt = number of observations/block
 #'   with nj the number of non-zero events in each block
 #'   Data are i.i.d., and non-zero events are stacked at the 'beginning' of each
 #'   block (e.g., their random inter-arrival times are not reproduced here!)
-#'   The distribution for the xij magnitudes and number of events nj
-#'   must be specified from the possible available.
+#'   The distribution for the xij magnitudes and yearly number of events nj
+#'   must be specified from the available ones.
 #'
-#'   ----------------------------------------------------------------------------
-#'      'bin'      -> nj ~ binomial(Nt, pn)
-#'      'betabin'  -> nj ~ betabinomial(Nt, an, bn) or [mn, varn]
-#'      'constant' -> nj ~ diracDelta(nc)
-#'  -----------------------------------------------------------------------------
+
 
 #'
-#'  The magnitudes of the events xij are drawn from one of the following models::
-#'  -----------------------------------------------------------------------------
-#'      Model specification:                         | Parameters to pass:
-#'  -----------------------------------------------------------------------------
-#'      'gam'     -> xij ~ gamma(a, b)               |  [a, b]
-#'      'gpd'     -> xij ~ gpd(xi, sigma)            |  [xi, sigma]
-#'      'wei'     -> xij ~ Weibull(C, w)             |  [C, w]
-#'      'wei_dyl' -> xij ~ Weibull(Cj, wj) with      |  [muc, sigmac, muw, sigmaw]
-#'                                                   |  or:   [mc, sc, mw, sw]
-#'                   Cj  ~ lognormal(muc, sigmac)    |
-#'                   wj  ~ lognormal(muw, sigmaw)    |
-#'      'wei_dsl' -> xij ~ Weibull(Cj, w) with       |  [muc, sigmac, w]
-#'                   Cj  ~ lognormal(muc, sigmac)    |
-#'      'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  [ac, bc, aw, bw]
-#'                                                   |  or: [mc, sc, mw, sw]
-#'                    Cj   ~ gamma(ac, bc)           |
-#'                    wj   ~ gamma(aw, bw)           |
-#'      'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  [aga, bga, agb, bgb]
-#'                                                   |  or: [ma, sa, mb, sb]
-#'                    aj  ~ gamma(aga, bga)          |
-#'                    bj  ~ gamma(agb, bgb)          |
-#'      'gan_dsc' ->  xij ~ gamma(a, bj) with        |  [a, agb, bgb]
-#'                    bj   ~ gamma(agb, bgb)         |
-#'  -----------------------------------------------------------------------------
+
 #'
 #'  NB: for n~betabinomial, I can pass one of the following:
 #'  ntrue = list(an=, bn=), or ntrue = list(mn=, varn=)
@@ -181,13 +156,53 @@ table_max <- function(df, Nt = 366, reshuffle_days = FALSE){
 #'  ------------------------------------------------------------
 #'
 #' @param S length of the time series to be generated (in years / blocks)
-#' @param ptrue list of parameters describing the distribution of event magnitudes
+#' @param ptrue Named list of parameters describing the distribution
+#'              of event magnitudes. The following choices are available:
+#'    Magnitudes of the events xij are drawn from one of the following models::
+#'  ----------------------------------------------------------------------------
+#'      Model specification: (dist)                  | Parameters to pass (ptrue):
+#'  ----------------------------------------------------------------------------
+#'      'gam'     -> xij ~ gamma(a, b)               |  ptrue = list(a, b)
+#'      'gpd'     -> xij ~ gpd(xi, sigma)            |  ptrue = list(xi, sigma)
+#'      'wei'     -> xij ~ Weibull(C, w)             |  ptrue = list(C, w)
+#'      'wei_dyl' -> xij ~ Weibull(Cj, wj) with:     |  ptrue = list(muc, sigmac, muw, sigmaw)
+#'                                                   |  or:   ptrue = list(mc, sc, mw, sw)
+#'                   Cj  ~ lognormal(muc, sigmac)    |
+#'                   wj  ~ lognormal(muw, sigmaw)    |
+#'                                                   |
+#'     'wei_dgu' -> xij ~ Weibull(Cj, wj) with:      |  ptrue = list(mc, sc, mw, sw)
+#'                   Cj  ~ Gumbel(mc, sc)            |
+#'                   wj  ~ Gumbel(mw, sw)            |
+#'                                                   |
+#'      'wei_dsl' -> xij ~ Weibull(Cj, w) with:      |  ptrue = list(muc, sigmac, w)
+#'                   Cj  ~ lognormal(muc, sigmac)    |
+#'      'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  ptrue = list(ac, bc, aw, bw)
+#'                                                   |  or: ptrue = list(mc, sc, mw, sw)
+#'                    Cj   ~ gamma(ac, bc)           |
+#'                    wj   ~ gamma(aw, bw)           |
+#'      'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  ptrue = list(aga, bga, agb, bgb)
+#'                                                   |  or: ptrue = list(ma, sa, mb, sb)
+#'                    aj  ~ gamma(aga, bga)          |
+#'                    bj  ~ gamma(agb, bgb)          |
+#'      'gam_dsc' ->  xij ~ gamma(a, bj) with        |  ptrue = list(a, agb, bgb)
+#'                    bj   ~ gamma(agb, bgb)         |
+#'  ----------------------------------------------------------------------------
+#'
 #' @param ntrue list of parameters describing the distribution of the number of events/block
+#'              The possible choices are possible:
+#'    ----------------------------------------------------------------------------
+#'      'bin'      -> nj ~ binomial(Nt, pn)
+#'      'betabin'  -> nj ~ betabinomial(Nt, an, bn) or (mn, varn)
+#'      'constant' -> nj ~ diracDelta(nc)
+#'  -----------------------------------------------------------------------------
 #' @param Nt the length of each block (default Nt = 366)
 #' @param ndist distribution of the number of events/block
 #'   (default is ndist='betabin' for the betabinomial distribution)
+#'   can be one of 'bin', 'betabin', or 'constant'.
 #' @param dist distribution of the event magnitudes
 #'   (default is dist='gam' for the gamma distribution)
+#'   can be 'gam', 'wei', 'gpd', 'wei', 'wei_dyl', 'wei_dsl', 'wei_dyn'
+#'   'gam_dyn', 'gam_dsc', or 'gam_dgu'
 #'
 #' @return a list with the following quantities:
 #' \describe{
@@ -293,45 +308,36 @@ for (j in 1:S){
           Xi = Xi, Fi = Fi, Tr = Tr))
 }
 
-#' Load a dataset of rainfall observations
+#' Load a dataset of rainfall observations from a csv file.
+#' e.g., one of the dataset extracted from the USHCN dataset.
 #'
-#' @param filepath
-#' @param readdata
-#' @param maxmiss
-#' @param min_nevents
-#' @param dividebyten
-#' @param Nt
-#' @return df, dataframe with the precipitation data
+#' @param filepath Must be the path to the csv with the data,
+#'                 or a data frame object with the data
+#'                 (depending on the 'readdata' option)
+#'                 The csv file must include the variable of interest
+#'                 in a $PRCP field (e.g., daily rainfall accumulations)
+#'                 and a $DATE field, integer in format YYYYMMDD,
+#'                 OR a $YEAR field, integer in format YYYY.
+#'                 Each year is treated as a separate block of data.
+#' @param readdata If TRUE, filepath must be the path+file name of a csv file
+#'                with the data. If FALSE, filepath must be a dataframe df
+#'                with the required fields (YEAR or DATE and PRCP).
+#'                (default readdata = TRUE)
+#' @param maxmiss This function removes from the record all the years (blocks)
+#'                with more than 'maxmiss' observations.
+#'                (either missing data, negative values or NANs are removed)
+#'                (default maxmiss = 30)
+#' @param min_nevents Min number of non-zero events that each year (block)
+#'                has to have in order to be included in the analysis.
+#'                (default min_nevents = 0)
+#' @param dividebyten If true, divide all rainfall values by 10 (default TRUE)
+#'                as in the USHCN dataset rainfall is stored in tenths of mm.
+#' @param Nt Number of observations in each block (by default Nt = 366)
+#' @return df, dataframe with the precipitation data.
 #' @export
 load_obs_data <- function(filepath, readdata=TRUE,
                           maxmiss = 30, min_nevents = 0,
                           dividebyten = TRUE , Nt = 366){
-  "------------------------------------------------------------
-  loads an observed time series from a csv file
-  from the path + filename 'filepath', (if readdata =TRUE)
-
-  else if readdata = FALSE, provide already a dataframe as filepath instead
-  of the actual file path - must have fields YEAR and PRCP.
-
-
-  csv file must include the variable of interest
-  in a $PRCP field (e.g., rainfall accumulations)
-  and a $DATE field, integer in format YYYYMMDD,
-  OR a $YEAR field, integer in format YYYY.
-  Remove from the record years with more than 'maxmiss' obs.
-  (either missing data, negative values of NANs are removed)
-
-  If dividebyten -> divide by 10 the values in $PRCP
-  (original GHCN data are stored in [tenths of mm] -> GOTO [mm])
-  Nt = expected number of events / year (default 366 = daily scale)
-
-  Remove from the record all years with less than
-  'min_nevents', minimum number of non zero events
-  (default = 0).
-  Some records might have many missing events in a few years.
-
-  Returns a dataframe df with the dataset.
-  -------------------------------------------------------------"
 
   # load file as a data frame or not
   if (readdata){
@@ -380,6 +386,95 @@ load_obs_data <- function(filepath, readdata=TRUE,
 }
 
 
+#' Splits a dataset in two parts to be used for calibration and testing.
+#'   Extract two datasets for validation and calibration,
+#'  with sizes M_val and M_cal years respectively.
+#'  If M_cal and M_val are longer than the available
+#'  time series, all available years are used instead.
+#'
+#'  If M_cal or M_val are longer than the sample size,
+#'  only the available data is used, thus producing
+#'  shorter samples, except in the case
+#'  of cross_validation when is not possible to produce an
+#'  independent validation sample as expected
+#'  (e.g., if M_cal > sample size an independent sample is not
+#'  created and an error is raised.)
+#'
+#'  Id decluster = TRUE, before fitting the models we apply a
+#'  declustering technique (default is FALSE):
+#'  The time lag Tau at which the serial correlation decays below
+#'  a given value 'signif_min' (default 0.05) is computed.
+#'  Then the time series is declustered with a running window of
+#'  length tau, in which only the largest observations is kept.
+#'
+#'  signif_lim = Value of autocorrelation below which
+#'  the time series is assumed to be uncorretated (used to determine the
+#'  window size for declustering if decluster = TRUE)
+#'
+#'  If reshuffle -> the order of the years in the record
+#'  is reshuffled before splitting the series in the two datasets.
+#'  (default id FALSE)
+#'
+#'  If reshuffle_days -> the number of events and the intensities
+#'                       of all events in the time series are
+#'                       resampled without resubstitution
+#'                       (default is FALSE)
+#'
+#'  If flip_time -> If not reshuffle, start extracting years
+#'                  from the end of the record,
+#'                  flipping the order of observed yerars
+#'                  (e.g., to simulate longer time series that
+#'                  go progressively back longer in time)
+#'                  extract as calibration the last M_cal years,
+#'                  (beacuse more recent data may have better resolution),
+#'                  and then extract the M_val years before (if cross_val),
+#'                  or again extract the last M_val years (with overlapping)
+#'                  if cross_val is FALSE.
+#'
+#'  If neither reshuffle or flip time, start extracting
+#'  samples from the beginning of the time series.
+#'
+#' @param df A data frame with the precipitation data. It must be a data frame
+#'           with fields PRCP (daily precipitation) and
+#'           YEAR (integer in format YYYY)
+#' @param M_cal Number of years in the calibration dataset (for model fitting)
+#' @param M_val Number of years in the validation dataset (for model testing)
+#' @param Nt The number of events/year, or block size (default is Nt = 366).
+#' @param cross_val If TRUE, the two datasets extracted are independent,
+#'                  i.e, are extracted from different parts of the time series.
+#'                  (default is TRUE). If FALSE, the two datasets can
+#'                  (and in general do) contain
+#'                  data from the same blocks of the original time series.
+#' @param reshuffle If TRUE, resample randomly all years in the time series
+#'                  before splitting in two dataset
+#' @param flip_time If TRUE, flip the time series before splitting it
+#'                  so that the calibration is extracted from the most recent values
+#'                  and validation from earlier recorded values.
+#'                  If false, do not flip time, so calibration and validation
+#'                  samples are extracted in cronological order
+#'                  (default is TRUE)
+#' @param reshuffle_days If TRUE, resample randomly all daily values in the
+#'                  original time series (default is FALSE)
+#' @param decluster If true, apply declustering to the original time series
+#'                  (default is FALSE)
+#' @param signif_lim Correlation value used as threshold in the declustering
+#'                   (default signif_lim = 0.05).
+#'                   It is the value of autocorrelation below which
+#'       the time series is assumed to be uncorretated (used to determine the
+#'       window size for declustering if decluster = TRUE)
+#' @return Return a list of two lists, named datacal and dataval.
+#'         Each list includes the following quantities:
+#' \describe{
+#'   \item{data}{matrix of size nyears*Nt with the daily values.
+#'     Each row is an yearly sample (with non-zero values at the beginning)}
+#'  \item{N}{yearly number of events}
+#'  \item{max}{block (annual) maxima}
+#'  \item{Xi}{sorted maxima}
+#'  \item{Fi}{empirical non exceedanc frequency of the maxima Xi}
+#'  \item{Tr}{empirical return time of the maxima Xi}
+#'  \item{years}{years from the record used for the dataset}
+#'  \item{nyears}{length of the dataset in years}
+#' }
 #' @export
 split_obs_data <- function(df, M_cal = 20,
                            M_val = 200,
@@ -390,72 +485,6 @@ split_obs_data <- function(df, M_cal = 20,
                            reshuffle_days = FALSE,
                            decluster = FALSE,
                            signif_lim = 0.05){
-  "---------------------------------------------------------
-  split a dataframe df in two datasets.
-
-  Extract two datasets for validation and calibration,
-  with sizes M_val and M_cal years respectively.
-  If M_cal and M_val are longer than the available
-  time series, all available years are used instead.
-
-  If cross_val -> the two dataset are independent.
-  If not       -> the calibration sample is usually
-                  contained in the validation one.
-
-  If M_cal or M_val are longer than the sample size,
-  only the available data is used, thus producing
-  shorter samples, except in the case
-  of cross_validation when is not possible to produce an
-  independent validation sample as expected
-  (e.g., if M_cal > sample size an independent sample is not
-  created and an error is raised.)
-
-  Id decluster = TRUE, before fitting the models we apply a
-  declustering technique (default is FALSE):
-  The time lag Tau at which the serial correlation decays below
-  a given value 'signif_min' (default 0.05) is computed.
-  Then the time series is declustered with a running window of
-  length tau, in which only the largest observations is kept.
-
-  signif_lim = Value of autocorrelation below which
-  the time series is assumed to be uncorretated (used to determine the
-  window size for declustering if decluster = TRUE)
-
-  If reshuffle -> the order of the years in the record
-  is reshuffled before splitting the series in the two datasets.
-  (default id FALSE)
-
-  If reshuffle_days -> the number of events and the intensities
-                       of all events in the time series are
-                       resampled without resubstitution
-                       (default is FALSE)
-
-  If flip_time -> If not reshuffle, start extracting years
-                  from the end of the record,
-                  flipping the order of observed yerars
-                  (e.g., to simulate longer time series that
-                  go progressively back longer in time)
-                  extract as calibration the last M_cal years,
-                  (beacuse more recent data may have better resolution),
-                  and then extract the M_val years before (if cross_val),
-                  or again extract the last M_val years (with overlapping)
-                  if cross_val is FALSE.
-
-  If neither reshuffle or flip time, start extracting
-  samples from the beginning of the time series.
-
-  Nt = number of events year (default 366, exclude leap years)
-
-  Return a list of two lists (datacal, dataval), each containing:
-  $data   = matrix of size nyears*Nt with the data
-  $N      = yearly number of events
-  $max    = block (annual) maxima
-  $Xi     = sorted maxima
-  $Fi     = empirical non exceedanc frequency of the maxima Xi
-  $Tr     = empirical return time of the maxima Xi
-  $years  = years from the record used for the dataset
-  $nyears = length of the dataset in years
-  ---------------------------------------------------------"
 
   if (decluster){
     decres = decluster(df, signif_lim = signif_lim)
@@ -562,10 +591,11 @@ split_obs_data <- function(df, M_cal = 20,
 #' so that each row is the sample within one block.
 #' Alternatively, it can be a vector with the block maxima if one sets
 #' the parameter onlymax_gev = TRUE (only for the GEV model).
-#' @param model which extreme value model.
-#'              Default is model='wei_dyn_bin'
+#' @param model which extreme value model. Default is model='wei_dyn_bin'.
+#'              Can be 'gev', 'pot_ppp', or one of the HBEV family.
+#'                fit one of the following extreme value models to data:
 #' @param Mgen Number of samples to draw for the latent level variable models
-#' ( for models of the HBEV family only)
+#'           ( for models of the HBEV family only).   (Default Mgen = 50)
 #' @param thresh_pot threshold for the Peak-Over-Threshold / Point Poisson Process
 #' (default thresh_pot = 10 units) not used by default!
 #' @param thresh_hbev threshold for the hbev family models
@@ -584,15 +614,15 @@ split_obs_data <- function(df, M_cal = 20,
 #' (default empirical_prior = FALSE)
 #' @param adapt_delta for HMC sampler (default adapt_delta = 0.8)
 #' @param priorpar to provide specific prior parameter values (default NULL)
-#' @param draw_priors if TRUE produce density for the priors
+#' @param draw_priors if TRUE draw rng from the priors
 #' (mostly for plotting)
-
+#'
 #' @return a list with the following quantities:
 #' \describe{
-#'   \item{model}{model name}
-#'   \item{Nt}{number of observations / block}
+#'   \item{model}{The model name}
+#'   \item{Nt}{number of observations / block used}
 #'   \item{prior}{prior distributions used (parameters, type and possibly rng)}
-#'   \item{Mgen}{number of samples for latent level paramaters}
+#'   \item{Mgen}{number of samples points used for latent level paramaters}
 #'   \item{thresh_pot}{threshold used for POT model}
 #'  \item{thresh_hbev}{threshold used for hbev models}
 #'  \item{model_fit}{Stan object with the model fit}
@@ -607,62 +637,8 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
                          adapt_delta = 0.8,
                          max_treedepth = 10,
                          priorpar = NULL,
-                         draw_priors=FALSE)
-{
-  "-------------------------------------------------------------------
-  fit one of the following extreme value models to data:
-  model = 'gev' for the Generalized Extreme Value Distribution
-        = 'pot' for the Poisson Process / Peak Over Threshold
-        = 'hbevs' for the static Weibull model
-        = 'hbevm' for the complete hierarchical model (latent lognormal)
-        = 'hbevd' for the complete hierarchical model, with latent invgamma
+                         draw_priors=FALSE){
 
-  *** NEW MODELS *****************************************************
-  'wdm' -> weibull dynamic model [complete] (latent lognormal)
-  'wds' -> weibull dynamic scale [only]
-  'wst' -> weibull static
-  'gdm' -> gamma dynamic model [complete]
-  'gds' -> gamma dynamic scale [only]
-  'gst' -> gamma static
-  *******************************************************************
-
-  For the models of the hbev* family only, uose one of the
-  following models for the number of events/block:
-  (not applicabile for GEV; POT uses Poisson model only)
-  N_model = 'bin' for Binomial
-          = 'betabin' for Betabinomial
-
-  thresh_pot = threshold for the POT model (default = 10 units)
-  thresh_hbev = threshold for the hbev* models (default = 0 units)
-  niter = 1000 number of iterations per chain
-          (default sampling after 500 warmup iterations)
-  nchains = 4
-
-  data = matrix of observations, with size nblocks*nobs oer block
-                      (e.g., nyears*ndays)
-  If 'onlymax_gev = TRUE', provide a sample of annual maxima instead of
-  the daily matrix data.
-
-  Generate Mgen years of data from the posterior distribution
-
-  If pot_frac = TRUE, instead of using thresh_pot, select a threshold
-  such that only a fraction 'frac exc' of the nonzero values is above
-  threshold (by default is 0.05, i.e., keeps 5% of the non zero
-  events as values above threshold)
-
-  refresh=0 -> no output displayed
-
-  Returns a list with the following named quantitites:
-  model       ->  (model name   - one of the above)
-  N_model     ->  (N model name - one of the above)
-  Nt          ->  (number of observations / block)
-  thresh_pot  ->  (as in input)
-  thresh_hbev ->  (as in input)
-  model_fit   ->  (fit object as returned by Stan)
-  N_model_fit ->  (fit object as returned by Stan)
-  prior       ->  (information on the prior distributions used)
-  N_prior     ->  (information on the prior distributions used for N)
-  ---------------------------------------------------------------------"
   nyears = dim(data)[1]
   Nt     = dim(data)[2]
  if (model == 'gev' | model == 'gev_nobounds'){
@@ -764,11 +740,31 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
 }
 
 
-
+  # return( list(qmean = qmean, qupper = qquant[3,],
+  #              qlower = qquant[1, ], qmedian = qquant[2, ],
+  #              fmean = fmean, fupper = fquant[3,],
+  #              flower = fquant[1, ], fmedian = fquant[2, ],
+  #              dmean = dmean, dupper = dquant[3,],
+  #              dlower = dquant[1, ], dmedian = dquant[2, ],
+  #              lpml = infc$lpml, lppd = infc$lppd,
+  #              fse = fse, fse_Tr = fse_Tr,
+  #              mbias = mbias, bias_Tr = bias_Tr,
+  #              mwidth = mwidth, width_Tr = width_Tr,
+  #              elpd_loo = infc$elpd_loo, p_loo = infc$p_loo,
+  #              elpd_waic1 = infc$elpd_waic1, elpd_waic2 = infc$elpd_waic2,
+  #              p_waic1 = infc$p_waic1, p_waic2 = infc$p_waic2,
+  #              quants = quants, cdfs = cdfs, pdfs = pdfs, epsi=epsi,
+  #              Fival=Fival, Xival=Xival, Trval=Trval,
+  #              FivalQ=FivalQ, XivalQ=XivalQ, TrvalQ=TrvalQ,
+  #              log_lik = log_lik,
+  #              model = model, Mgen = Mgen,
+  #              nwarning_x0 = nwarning_x0,
+  #              thresh_hbev = model_fit$thresh_hbev
+  #              ))
 
 #' Compute quantiles and goodness of fit measures for a fitted model
 #'
-#' @param model_fit list as returned from the fit_ev_model function
+#' @param model_fit list as returned from the fit_ev_model function.
 #' @param maxval array of annual maxima to be used for
 #' model validation and for computing quantiles
 #' @param trmin minimum return time for computing quantiles,
@@ -776,45 +772,74 @@ fit_ev_model <- function(data, model = 'wei_dyn_bin', Mgen = 50,
 #' (default trmin = 2)
 #' @return a list with the following named quantities
 #' \describe{
-#'   \item{qmean}{expected value for the computed quantiles (for Tr >= trmin)}
-#'   \item{qupper}{upper credidility interval for quantiles (prob = 0.95)
-#'   (quantiles only for Tr >= trmin)}
-#'   \item{qlower}{lower credibility interval for quantiles (prob = 0.05)
-#'   (quantiles only for Tr >= trmin)}
+#'   \item{qmean}{mean value for the computed quantiles
+#'   (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+#'   \item{qupper}{upper bound of credidility interval for quantiles (prob = 0.95)
+#'   (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+#'   \item{qlower}{lower bound of credibility interval for quantiles (prob = 0.05)
+#'   (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
 #'   \item{qmedian}{median value of the computed quantiles  (prob = 0.50)
-#'   (quantiles only for Tr >= trmin)}
-#'   \item{fmean}
-#'   \item{fupper}
-#'   \item{flower}
-#'   \item{fmedian}
-#'   \item{dmean}
-#'   \item{dupper}
-#'   \item{dlower}
-#'   \item{dmedian}
-#'   \item{lpml}
-#'   \item{lppd}
-#'   \item{fse}
-#'   \item{mbias}
-#'   \item{mwidth}
-#'   \item{fse_Tr}
-#'   \item{bias_Tr}
-#'   \item{wisth_Tr}
-#'   \item{elpd_loo}
-#'   \item{p_loo}
-#'   \item{elpd_waic1}
-#'   \item{p_waic1}
-#'   \item{elpd_waic2}
-#'   \item{p_waic2}
-#'   \item{quants}
-#'   \item{cdfs}
-#'   \item{pdfs}
-#'   \item{epsi}
-#'   \item{Fival}
-#'   \item{Trval}
-#'   \item{Xival}
-#'   \item{FivalQ}
-#'   \item{TrvalQ}
-#'   \item{XivalQ}
+#'   (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+#'   \item{fmean}{mean value of computed non exceedance probability,
+#'     corresponding to the sorted empirical quantiles (Xival)}
+#'   \item{fupper}{upper bound (prob below = 0.95) of credibility interval
+#'           for the model computed non exceedance probability,
+#'           corresponding to the sorted empirical quantiles (Xival)}
+#'   \item{flower}{lower bound (prob below = 0.05) of credibility interval
+#'           for the model computed non exceedance probability,
+#'           corresponding to the sorted empirical quantiles (Xival)}
+#'   \item{fmedian}{median value of computed non exceedance probability,
+#'     corresponding to the sorted empirical quantiles (Xival)}
+#'   \item{dmean}{mean value of computed probability density,
+#'     corresponding to the sorted annual maxima values (Xival)}
+#'   \item{dupper}{upper bound (prob below = 0.95) of credibility interval
+#'           for the model computed probability density,
+#'           corresponding to the sorted annual maximavalues (Xival)}
+#'   \item{dlower}{lower bound (prob below = 0.05) of credibility interval
+#'           for the model computed probability density,
+#'           corresponding to the sorted annual maixma values (Xival)}
+#'   \item{dmedian}{median value of computed probability density,
+#'     corresponding to the sorted annual maxima values (Xival)}
+#'   \item{lpml}{estimated value of log posterior marginal likelihood
+#'              (divided by the sample size and multiplied by -1)}
+#'   \item{lppd}{estimated value of log posterior predictive density
+#'              (divided by the sample size and multiplied by -1)}
+#'   \item{fse}{fractional square error (computed for Tr >= trmin)}
+#'   \item{mbias}{mean bias (computed for Tr >= trmin)}
+#'   \item{mwidth}{average width of credibility intervals (computed for Tr >= trmin)}
+#'   \item{fse_Tr}{same as fse, but array with one value for each value with Tr >= trmin}
+#'   \item{bias_Tr}{same as mbias, but array with one value for each value with Tr >= trmin}
+#'   \item{width_Tr}{same as mwidth, but array with one value for each value with Tr >= trmin}
+#'   \item{elpd_loo}{elpd computed accoring to Vehtari et al 2017 (NOT COMPUTED)}
+#'   \item{p_loo}{effective number of parameters corresponding to elpd_loo (NOT COMPUTED)}
+#'   \item{elpd_waic1}{Watanabe Aikake information criteria, version 1 (Gelman et al, 2013)}
+#'   \item{p_waic1}{effective number of parameters computed with the waic1 measure}
+#'   \item{elpd_waic2}{Watanabe Aikake information criteria, version 2 (Gelman et al, 2013)}
+#'   \item{p_waic2}{effective number of parameters computed with the waic2 measure}
+#'   \item{quants}{matrix of model computed quantiles, corresponding to the
+#'   empirical non exceedance frequencies (FivalQ)
+#'   of the annual maxima in the validation sample 'maxval' for Tr > trmin.
+#'   matrix od size (number of draws from the posterior)*(size of annual maxima sample 'maxval')}
+#'   \item{cdfs}{matrix of model computed non exceedance probabilities,
+#'   computed for the annual maxima in the validation sample, sorted (Xival).
+#'   matrix of size (number of draws from the posterior)*(size of annual maxima sampple 'maxval')}
+#'   \item{pdfs}{matrix of likelihood values used to compute lppd and lpml}
+#'   computed for the annual maxima in the validation sample (Xival).
+#'   matrix of size (number of draws fro the posterior)*(size of annual maxima sample 'maxval')
+#'   \item{epsi}{matrix of relative errors used to compute fse, of size
+#'   (number of draws from the posterior)*(number of annual maxima with Tr > trmin)}
+#'   \item{Fival}{values of empirical non exceedance probability for the
+#'   annual maxima in the validation sample (maxval)}
+#'   \item{Trval}{values of empirical return time for the
+#'   annual maxima in the validation sample (maxval)}
+#'   \item{Xival}{sorted annual maxima from the validation sample (maxval)}
+#'   \item{FivalQ}{values of empirical non exceedance probability for
+#'    which quantiles are computed (only for Tr >= 2)}
+#'   \item{TrvalQ}{values of empirical return time for
+#'    which quantiles are computed (only for Tr >= 2)}
+#'   \item{XivalQ}{sample observed annual maxima corresponding to the
+#'   values of return times (TrvalQ) or non-exceedance frequencies (TivalQ) for
+#'    which quantiles are computed (only for Tr >= 2)}
 #'   \item{log_lik}{log likelihood (nyears*ndraws)}
 #'   \item{model}{name of the model}
 #'   \item{Mgen}{number of draws for latent variable level for hbev models}
