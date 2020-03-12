@@ -30,11 +30,12 @@ so that each row is the sample within one block.
 Alternatively, it can be a vector with the block maxima if one sets
 the parameter onlymax_gev = TRUE (only for the GEV model).}
 
-\item{model}{which extreme value model.
-Default is model='wei_dyn_bin'}
+\item{model}{which extreme value model. Default is model='wei_dyn_bin'.
+Can be 'gev', 'pot_ppp', or one of the HBEV family.
+  fit one of the following extreme value models to data:}
 
 \item{Mgen}{Number of samples to draw for the latent level variable models
-( for models of the HBEV family only)}
+( for models of the HBEV family only).   (Default Mgen = 50)}
 
 \item{thresh_pot}{threshold for the Peak-Over-Threshold / Point Poisson Process
 (default thresh_pot = 10 units) not used by default!}
@@ -65,16 +66,16 @@ By default 50% burn it period.}
 
 \item{priorpar}{to provide specific prior parameter values (default NULL)}
 
-\item{draw_priors}{if TRUE produce density for the priors
+\item{draw_priors}{if TRUE draw rng from the priors
 (mostly for plotting)}
 }
 \value{
 a list with the following quantities:
 \describe{
-  \item{model}{model name}
-  \item{Nt}{number of observations / block}
+  \item{model}{The model name}
+  \item{Nt}{number of observations / block used}
   \item{prior}{prior distributions used (parameters, type and possibly rng)}
-  \item{Mgen}{number of samples for latent level paramaters}
+  \item{Mgen}{number of samples points used for latent level paramaters}
   \item{thresh_pot}{threshold used for POT model}
  \item{thresh_hbev}{threshold used for hbev models}
  \item{model_fit}{Stan object with the model fit}

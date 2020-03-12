@@ -7,7 +7,7 @@
 comp_quant(model_fit, maxval, trmin = 2)
 }
 \arguments{
-\item{model_fit}{list as returned from the fit_ev_model function}
+\item{model_fit}{list as returned from the fit_ev_model function.}
 
 \item{maxval}{array of annual maxima to be used for
 model validation and for computing quantiles}
@@ -19,45 +19,74 @@ and to be included in the fractional square error / mean bias measures
 \value{
 a list with the following named quantities
 \describe{
-  \item{qmean}{expected value for the computed quantiles (for Tr >= trmin)}
-  \item{qupper}{upper credidility interval for quantiles (prob = 0.95)
-  (quantiles only for Tr >= trmin)}
-  \item{qlower}{lower credibility interval for quantiles (prob = 0.05)
-  (quantiles only for Tr >= trmin)}
+  \item{qmean}{mean value for the computed quantiles
+  (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+  \item{qupper}{upper bound of credidility interval for quantiles (prob = 0.95)
+  (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+  \item{qlower}{lower bound of credibility interval for quantiles (prob = 0.05)
+  (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
   \item{qmedian}{median value of the computed quantiles  (prob = 0.50)
-  (quantiles only for Tr >= trmin)}
-  \item{fmean}
-  \item{fupper}
-  \item{flower}
-  \item{fmedian}
-  \item{dmean}
-  \item{dupper}
-  \item{dlower}
-  \item{dmedian}
-  \item{lpml}
-  \item{lppd}
-  \item{fse}
-  \item{mbias}
-  \item{mwidth}
-  \item{fse_Tr}
-  \item{bias_Tr}
-  \item{wisth_Tr}
-  \item{elpd_loo}
-  \item{p_loo}
-  \item{elpd_waic1}
-  \item{p_waic1}
-  \item{elpd_waic2}
-  \item{p_waic2}
-  \item{quants}
-  \item{cdfs}
-  \item{pdfs}
-  \item{epsi}
-  \item{Fival}
-  \item{Trval}
-  \item{Xival}
-  \item{FivalQ}
-  \item{TrvalQ}
-  \item{XivalQ}
+  (quantiles only for Tr >= trmin), corresponding to FivalQ and TrvalQ}
+  \item{fmean}{mean value of computed non exceedance probability,
+    corresponding to the sorted empirical quantiles (Xival)}
+  \item{fupper}{upper bound (prob below = 0.95) of credibility interval
+          for the model computed non exceedance probability,
+          corresponding to the sorted empirical quantiles (Xival)}
+  \item{flower}{lower bound (prob below = 0.05) of credibility interval
+          for the model computed non exceedance probability,
+          corresponding to the sorted empirical quantiles (Xival)}
+  \item{fmedian}{median value of computed non exceedance probability,
+    corresponding to the sorted empirical quantiles (Xival)}
+  \item{dmean}{mean value of computed probability density,
+    corresponding to the sorted annual maxima values (Xival)}
+  \item{dupper}{upper bound (prob below = 0.95) of credibility interval
+          for the model computed probability density,
+          corresponding to the sorted annual maximavalues (Xival)}
+  \item{dlower}{lower bound (prob below = 0.05) of credibility interval
+          for the model computed probability density,
+          corresponding to the sorted annual maixma values (Xival)}
+  \item{dmedian}{median value of computed probability density,
+    corresponding to the sorted annual maxima values (Xival)}
+  \item{lpml}{estimated value of log posterior marginal likelihood
+             (divided by the sample size and multiplied by -1)}
+  \item{lppd}{estimated value of log posterior predictive density
+             (divided by the sample size and multiplied by -1)}
+  \item{fse}{fractional square error (computed for Tr >= trmin)}
+  \item{mbias}{mean bias (computed for Tr >= trmin)}
+  \item{mwidth}{average width of credibility intervals (computed for Tr >= trmin)}
+  \item{fse_Tr}{same as fse, but array with one value for each value with Tr >= trmin}
+  \item{bias_Tr}{same as mbias, but array with one value for each value with Tr >= trmin}
+  \item{width_Tr}{same as mwidth, but array with one value for each value with Tr >= trmin}
+  \item{elpd_loo}{elpd computed accoring to Vehtari et al 2017 (NOT COMPUTED)}
+  \item{p_loo}{effective number of parameters corresponding to elpd_loo (NOT COMPUTED)}
+  \item{elpd_waic1}{Watanabe Aikake information criteria, version 1 (Gelman et al, 2013)}
+  \item{p_waic1}{effective number of parameters computed with the waic1 measure}
+  \item{elpd_waic2}{Watanabe Aikake information criteria, version 2 (Gelman et al, 2013)}
+  \item{p_waic2}{effective number of parameters computed with the waic2 measure}
+  \item{quants}{matrix of model computed quantiles, corresponding to the
+  empirical non exceedance frequencies (FivalQ)
+  of the annual maxima in the validation sample 'maxval' for Tr > trmin.
+  matrix od size (number of draws from the posterior)*(size of annual maxima sample 'maxval')}
+  \item{cdfs}{matrix of model computed non exceedance probabilities,
+  computed for the annual maxima in the validation sample, sorted (Xival).
+  matrix of size (number of draws from the posterior)*(size of annual maxima sampple 'maxval')}
+  \item{pdfs}{matrix of likelihood values used to compute lppd and lpml}
+  computed for the annual maxima in the validation sample (Xival).
+  matrix of size (number of draws fro the posterior)*(size of annual maxima sample 'maxval')
+  \item{epsi}{matrix of relative errors used to compute fse, of size
+  (number of draws from the posterior)*(number of annual maxima with Tr > trmin)}
+  \item{Fival}{values of empirical non exceedance probability for the
+  annual maxima in the validation sample (maxval)}
+  \item{Trval}{values of empirical return time for the
+  annual maxima in the validation sample (maxval)}
+  \item{Xival}{sorted annual maxima from the validation sample (maxval)}
+  \item{FivalQ}{values of empirical non exceedance probability for
+   which quantiles are computed (only for Tr >= 2)}
+  \item{TrvalQ}{values of empirical return time for
+   which quantiles are computed (only for Tr >= 2)}
+  \item{XivalQ}{sample observed annual maxima corresponding to the
+  values of return times (TrvalQ) or non-exceedance frequencies (TivalQ) for
+   which quantiles are computed (only for Tr >= 2)}
   \item{log_lik}{log likelihood (nyears*ndraws)}
   \item{model}{name of the model}
   \item{Mgen}{number of draws for latent variable level for hbev models}

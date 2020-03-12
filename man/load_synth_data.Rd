@@ -4,68 +4,86 @@
 \alias{load_synth_data}
 \title{Generate syntetic data according to a given specification.
   generates a matrix xij of synthetic data with dimension S*Nt
-  where S = number of blocks (e.g., years), and
+  where S = number of blocks (e.g., number of years), and
         Nt = number of observations/block
   with nj the number of non-zero events in each block
   Data are i.i.d., and non-zero events are stacked at the 'beginning' of each
   block (e.g., their random inter-arrival times are not reproduced here!)
-  The distribution for the xij magnitudes and number of events nj
-  must be specified from the possible available.}
+  The distribution for the xij magnitudes and yearly number of events nj
+  must be specified from the available ones.}
 \usage{
 load_synth_data(S, ptrue, ntrue, Nt = 366, ndist = "betabin", dist = "gam")
 }
 \arguments{
 \item{S}{length of the time series to be generated (in years / blocks)}
 
-\item{ptrue}{list of parameters describing the distribution of event magnitudes}
+\item{ptrue}{Named list of parameters describing the distribution
+            of event magnitudes. The following choices are available:
+  Magnitudes of the events xij are drawn from one of the following models::
+----------------------------------------------------------------------------
+    Model specification: (dist)                  | Parameters to pass (ptrue):
+----------------------------------------------------------------------------
+    'gam'     -> xij ~ gamma(a, b)               |  ptrue = list(a, b)
+    'gpd'     -> xij ~ gpd(xi, sigma)            |  ptrue = list(xi, sigma)
+    'wei'     -> xij ~ Weibull(C, w)             |  ptrue = list(C, w)
+    'wei_dyl' -> xij ~ Weibull(Cj, wj) with:     |  ptrue = list(muc, sigmac, muw, sigmaw)
+                                                 |  or:   ptrue = list(mc, sc, mw, sw)
+                 Cj  ~ lognormal(muc, sigmac)    |
+                 wj  ~ lognormal(muw, sigmaw)    |
+                                                 |
+   'wei_dgu' -> xij ~ Weibull(Cj, wj) with:      |  ptrue = list(mc, sc, mw, sw)
+                 Cj  ~ Gumbel(mc, sc)            |
+                 wj  ~ Gumbel(mw, sw)            |
+                                                 |
+    'wei_dsl' -> xij ~ Weibull(Cj, w) with:      |  ptrue = list(muc, sigmac, w)
+                 Cj  ~ lognormal(muc, sigmac)    |
+    'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  ptrue = list(ac, bc, aw, bw)
+                                                 |  or: ptrue = list(mc, sc, mw, sw)
+                  Cj   ~ gamma(ac, bc)           |
+                  wj   ~ gamma(aw, bw)           |
+    'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  ptrue = list(aga, bga, agb, bgb)
+                                                 |  or: ptrue = list(ma, sa, mb, sb)
+                  aj  ~ gamma(aga, bga)          |
+                  bj  ~ gamma(agb, bgb)          |
+    'gam_dsc' ->  xij ~ gamma(a, bj) with        |  ptrue = list(a, agb, bgb)
+                  bj   ~ gamma(agb, bgb)         |
+----------------------------------------------------------------------------}
 
-\item{ntrue}{list of parameters describing the distribution of the number of events/block}
+\item{ntrue}{list of parameters describing the distribution of the number of events/block
+            The possible choices are possible:
+  ----------------------------------------------------------------------------
+    'bin'      -> nj ~ binomial(Nt, pn)
+    'betabin'  -> nj ~ betabinomial(Nt, an, bn) or (mn, varn)
+    'constant' -> nj ~ diracDelta(nc)
+-----------------------------------------------------------------------------}
 
 \item{Nt}{the length of each block (default Nt = 366)}
 
 \item{ndist}{distribution of the number of events/block
-(default is ndist='betabin' for the betabinomial distribution)}
+(default is ndist='betabin' for the betabinomial distribution)
+can be one of 'bin', 'betabin', or 'constant'.}
 
 \item{dist}{distribution of the event magnitudes
-(default is dist='gam' for the gamma distribution)}
+(default is dist='gam' for the gamma distribution)
+can be 'gam', 'wei', 'gpd', 'wei', 'wei_dyl', 'wei_dsl', 'wei_dyn'
+'gam_dyn', 'gam_dsc', or 'gam_dgu'}
 }
 \value{
 
 }
 \description{
-----------------------------------------------------------------------------
-     'bin'      -> nj ~ binomial(Nt, pn)
-     'betabin'  -> nj ~ betabinomial(Nt, an, bn) or [mn, varn]
-     'constant' -> nj ~ diracDelta(nc)
- -----------------------------------------------------------------------------
+Generate syntetic data according to a given specification.
+  generates a matrix xij of synthetic data with dimension S*Nt
+  where S = number of blocks (e.g., number of years), and
+        Nt = number of observations/block
+  with nj the number of non-zero events in each block
+  Data are i.i.d., and non-zero events are stacked at the 'beginning' of each
+  block (e.g., their random inter-arrival times are not reproduced here!)
+  The distribution for the xij magnitudes and yearly number of events nj
+  must be specified from the available ones.
 }
 \details{
-The magnitudes of the events xij are drawn from one of the following models::
- -----------------------------------------------------------------------------
-     Model specification:                         | Parameters to pass:
- -----------------------------------------------------------------------------
-     'gam'     -> xij ~ gamma(a, b)               |  [a, b]
-     'gpd'     -> xij ~ gpd(xi, sigma)            |  [xi, sigma]
-     'wei'     -> xij ~ Weibull(C, w)             |  [C, w]
-     'wei_dyl' -> xij ~ Weibull(Cj, wj) with      |  [muc, sigmac, muw, sigmaw]
-                                                  |  or:   [mc, sc, mw, sw]
-                  Cj  ~ lognormal(muc, sigmac)    |
-                  wj  ~ lognormal(muw, sigmaw)    |
-     'wei_dsl' -> xij ~ Weibull(Cj, w) with       |  [muc, sigmac, w]
-                  Cj  ~ lognormal(muc, sigmac)    |
-     'wei_dyn' -> xij ~ Weibull(Cj, wj) with      |  [ac, bc, aw, bw]
-                                                  |  or: [mc, sc, mw, sw]
-                   Cj   ~ gamma(ac, bc)           |
-                   wj   ~ gamma(aw, bw)           |
-     'gam_dyn' ->  xij ~ gamma(aj, bj) with       |  [aga, bga, agb, bgb]
-                                                  |  or: [ma, sa, mb, sb]
-                   aj  ~ gamma(aga, bga)          |
-                   bj  ~ gamma(agb, bgb)          |
-     'gan_dsc' ->  xij ~ gamma(a, bj) with        |  [a, agb, bgb]
-                   bj   ~ gamma(agb, bgb)         |
- -----------------------------------------------------------------------------
-
- NB: for n~betabinomial, I can pass one of the following:
+NB: for n~betabinomial, I can pass one of the following:
  ntrue = list(an=, bn=), or ntrue = list(mn=, varn=)
  i.e., mean and variance prescribed instead of the beta-binomial parameters.
 

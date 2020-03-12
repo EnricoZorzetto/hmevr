@@ -2,7 +2,8 @@
 % Please edit documentation in R/hbev_module.R
 \name{load_obs_data}
 \alias{load_obs_data}
-\title{Load a dataset of rainfall observations}
+\title{Load a dataset of rainfall observations from a csv file.
+e.g., one of the dataset extracted from the USHCN dataset.}
 \usage{
 load_obs_data(
   filepath,
@@ -13,9 +14,39 @@ load_obs_data(
   Nt = 366
 )
 }
+\arguments{
+\item{filepath}{Must be the path to the csv with the data,
+or a data frame object with the data
+(depending on the 'readdata' option)
+The csv file must include the variable of interest
+in a $PRCP field (e.g., daily rainfall accumulations)
+and a $DATE field, integer in format YYYYMMDD,
+OR a $YEAR field, integer in format YYYY.
+Each year is treated as a separate block of data.}
+
+\item{readdata}{If TRUE, filepath must be the path+file name of a csv file
+with the data. If FALSE, filepath must be a dataframe df
+with the required fields (YEAR or DATE and PRCP).
+(default readdata = TRUE)}
+
+\item{maxmiss}{This function removes from the record all the years (blocks)
+with more than 'maxmiss' observations.
+(either missing data, negative values or NANs are removed)
+(default maxmiss = 30)}
+
+\item{min_nevents}{Min number of non-zero events that each year (block)
+has to have in order to be included in the analysis.
+(default min_nevents = 0)}
+
+\item{dividebyten}{If true, divide all rainfall values by 10 (default TRUE)
+as in the USHCN dataset rainfall is stored in tenths of mm.}
+
+\item{Nt}{Number of observations in each block (by default Nt = 366)}
+}
 \value{
-df, dataframe with the precipitation data
+df, dataframe with the precipitation data.
 }
 \description{
-Load a dataset of rainfall observations
+Load a dataset of rainfall observations from a csv file.
+e.g., one of the dataset extracted from the USHCN dataset.
 }

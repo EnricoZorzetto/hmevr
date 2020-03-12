@@ -11,14 +11,16 @@ table_max(df, Nt = 366, reshuffle_days = FALSE)
 with fields PRCP (daily precipitation) and
 YEAR (integer in format YYYY)}
 
-\item{Nt}{The number of events/year (default is Nt = 366). If record length in an
-year is shorter than Nt, zero values are added.
+\item{Nt}{The number of events/year (default is Nt = 366).
+If record length in an
+year is shorter than Nt, zero values are added
+so that each block has the same length.
 If longer, excess values are dropped.}
 
 \item{reshuffle_days}{if TRUE, the number of events/block
 and the intensities of all events
 in the time series are
-resampled without resubstitution
+resampled without resubstitution.
 (default is reshuffle_days = FALSE)}
 }
 \value{
