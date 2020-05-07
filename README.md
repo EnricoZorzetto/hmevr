@@ -1,2 +1,2 @@
-# hmevr R package
+# hmevR R package
 Implements a Hierarchical Bayesian Extreme Value model in R
