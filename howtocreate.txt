@@ -8,8 +8,8 @@ devtools::document()
 
 Install package with
 
-    install.packages('../hbevr', repos = NULL, type="source")
-install.packages('/home/enrico/Projects/hbevr', repos = NULL, type="source")
+    install.packages('../hmevr', repos = NULL, type="source")
+install.packages('/home/enrico/Projects/hmevr', repos = NULL, type="source")
 devtools::document()
 
 

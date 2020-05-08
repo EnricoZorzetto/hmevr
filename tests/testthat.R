@@ -1,4 +1,4 @@
 library(testthat)
-library(hbevr)
+library(hmevr)
 
-test_check("hbevr")
+test_check("hmevr")

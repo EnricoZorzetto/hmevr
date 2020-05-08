@@ -1,5 +1,5 @@
-Package: hbevr
-Title: Hierarchical Bayesian Extreme Value in R
+Package: hmevr
+Title: Hierarchical Model for Extreme Values in R
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Enrico",
