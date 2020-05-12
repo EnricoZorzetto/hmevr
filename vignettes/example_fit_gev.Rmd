@@ -1,5 +1,5 @@
 ---
-title: "example_fit_gev"
+title: "Example: fit the GEV distribution"
 author: "Enrico Zorzetto"
 date: "` r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -20,12 +20,12 @@ knitr::opts_chunk$set(
 library(extRemes)
 library(extraDistr)
 library(rstan)
-rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
-library(hbevr)
+# rstan_options(auto_write = TRUE)
+# options(mc.cores = parallel::detectCores())
+library(hmevr)
 ```
 
-# Generate synthetic data from GEV with known parameters
+Generate synthetic data from GEV with known parameters
 ```{r}
 mu_true = 100
 xi_true = 0.1
@@ -34,24 +34,24 @@ ssize = 60
 sample = extraDistr::rgev(ssize, mu = mu_true, sigma = sigma_true, xi = xi_true)
 ```
 
-# Fit the GEV model
+Fit the GEV model
 ```{r}
 # fit stan model
-gevfit <- hbevr::fit_ev_model(sample, model='gev', onlymax_gev = TRUE)
+gevfit <- hmevr::fit_ev_model(sample, model='gev', onlymax_gev = TRUE)
 ```
 
-# compute GEV quantiles
+Compute GEV quantiles
 ```{r}
 # compute quantiles
-gevq = hbevr::comp_quant(gevfit, sample)
+gevq = hmevr::comp_quant(gevfit, sample)
 ```
 
-# Plot the result
+Plot the result
 ```{r}
-plot(gevq$Trval, gevq$XivalQ)
-lines(gevq$Trval, gevq$qmean,  col='red', lty = 'solid')
-lines(gevq$Trval, gevq$qupper, col='red', lty = 'dashed')
-lines(gevq$Trval, gevq$qlower, col='red', lty = 'dashed')
+plot(gevq$TrvalQ, gevq$XivalQ)
+lines(gevq$TrvalQ, gevq$qmean,  col='red', lty = 'solid')
+lines(gevq$TrvalQ, gevq$qupper, col='red', lty = 'dashed')
+lines(gevq$TrvalQ, gevq$qlower, col='red', lty = 'dashed')
 
 ```
 

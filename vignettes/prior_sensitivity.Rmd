@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 
 ```{r setup}
-library(hbevr)
+library(hmevr)
 library(rstan)
 library(nleqslv)
 library(extraDistr)
@@ -39,13 +39,9 @@ plot(df$DATE, df$PRCP)
 ```
 
 
-## Tunable quantities for this analysis
-
-### Parameters for the HMC sampler
-
+Tunable quantities for this analysis and parameters for the HMC sampler
 The burn-in period is fixed to 1/2 of the sampling
 
-thresh_hbev -> threshold for determining non-zero rainfall events
  
 ```{r}
 iter = 2000 # number of iterations for each chain
@@ -53,7 +49,7 @@ chains = 4  # number of chains
 ndraws = iter*chains/2 # total number of draws from the posterior
 thresh_hbev = 0
 adapt_delta = 0.8
-corr_signif_lim = 0.05
+corr_signif_lim = 0.1
 trmin = 5 
 Mgen = 50
 Nt = 366 # number of events / year
@@ -169,7 +165,7 @@ fig <- ggplot(df) +
   facet_wrap('param', scales = 'free') 
   
   fig
-  figname = file.path('..', 'output', 'outplot', sprintf('prior_sens_%s_%s', modelname, ssize))
+  # figname = file.path('..', 'output', 'outplot', sprintf('prior_sens_%s_%s', modelname, ssize))
   # ggsave(figname, plot=fig, device = 'png')
 
 
