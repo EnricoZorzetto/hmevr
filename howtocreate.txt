@@ -4,18 +4,18 @@ use usethis::use_fun() instead of devtools::use_fun()
 # modify codes, and then if necessary::
 library(devtools)
 devtools::document()
-  devtools::build(vignettes=FALSE)
+devtools::build(vignettes=FALSE)
 
 Install package with
 
-      install.packages('../hmevr', repos = NULL, type="source")
+install.packages('../hmevr', repos = NULL, type="source")
 install.packages('/home/enrico/Projects/hmevr', repos = NULL, type="source")
 devtools::document()
 
 
 usethis::use_package('rstan')
 
-# to update hbevr package on the cluster:
+# to update hmevr package on the cluster:
 - push it to the desired folder. Upload without the src subfolder.
 - build without vignettes
-- install after load module GCC, from within R
+- install after loading module GCC, from within R
